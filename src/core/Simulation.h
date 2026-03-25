@@ -3,17 +3,21 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H    
 #include "Satellite.h"
+#include <vector>
 
 class Simulation {
     private:
-        Satellite s;
+        std::vector<Satellite> satellites;
         double timeStep;
 
     public:
-        // Constructor for the Simulation class, takes a Satellite and a time step as arguments
-        Simulation(const Satellite& s, double timeStep);
+        // Constructor for the Simulation class, takes a time step as arguments
+        Simulation(double timeStep);
 
-        // Run function for the Simulation class, it runs an infinite loop that updates the satellite's position and velocity 
+        // adds a satellite to the simulation
+        void addSatellite(Satellite s);
+
+        // Run function for the Simulation class, it runs an infinite loop that updates every satellite's position and velocity 
         //every time step
         void run();
 };
