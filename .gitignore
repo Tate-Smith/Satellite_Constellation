@@ -8,3 +8,6 @@
 /build/
 /bin/
 /dist/
+
+# vscode settings
+.vscode/
