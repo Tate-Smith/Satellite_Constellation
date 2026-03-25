@@ -1,0 +1,10 @@
+# Compiled binaries
+*.o
+*.exe
+*.out
+*.class
+
+# Build folders
+/build/
+/bin/
+/dist/
