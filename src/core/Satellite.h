@@ -14,8 +14,20 @@ class Satellite {
         // contructor
         Satellite(int id, double x, double y, double z, double vx, double vy, double vz);
 
+        // getters
+        int getId();
+
+        int getX();
+
+        int getY();
+
+        int getZ();
+
         // update function
         void update(double dt);
+
+        // get the distance of the satellite from another satellite
+        double distance(Satellite other);
 
         // print function, gets the id and position and velocity
         void print();

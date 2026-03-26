@@ -23,6 +23,11 @@ void Simulation::run() {
         for (Satellite& s : satellites) {
             s.update(timeStep);
             s.print();
+            for (Satellite& neighbor : satellites) {
+                if (&neighbor != &s && s.distance(neighbor) <= distance) {
+                    cout << "Satellite: " << neighbor.getId() << " is neighbor of: " << s.getId() << endl;
+                }
+            }
         }
         sleep(1);
     }
