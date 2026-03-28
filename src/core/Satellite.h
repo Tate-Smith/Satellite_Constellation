@@ -17,20 +17,20 @@ class Satellite {
         // getters
         int getId();
 
-        int getX();
+        double getX() const;
 
-        int getY();
+        double getY() const;
 
-        int getZ();
+        double getZ() const;
 
         // update function
         void update(double dt);
 
         // get the distance of the satellite from another satellite
-        double distance(Satellite other);
+        double distance(const Satellite& other) const;
 
         // print function, gets the id and position and velocity
-        void print();
+        void print() const;
 };
 
 #endif

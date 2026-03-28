@@ -9,7 +9,7 @@ class Simulation {
     private:
         std::vector<Satellite> satellites;
         double timeStep;
-        const double distance = 10;
+        const double neighborDistance = 10.0;
 
     public:
         // Constructor for the Simulation class, takes a time step as arguments
