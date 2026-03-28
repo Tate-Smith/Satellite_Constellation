@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 25th, 2026
+Last Updated: March 28th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -9,7 +9,6 @@ information from other satellites and ground control
 
 #include "Satellite.h"
 #include <cmath>
-using namespace std;
 
 Satellite::Satellite(int id, double x, double y, double z, double vx, double vy, double vz) {
     this->id = id;
@@ -21,19 +20,19 @@ Satellite::Satellite(int id, double x, double y, double z, double vx, double vy,
     this->vz = vz;
 }
 
-int Satellite::getId() {
+int Satellite::getId() const{
     return id;
 }
 
-int Satellite::getX() {
+double Satellite::getX() const {
     return x;
 }
 
-int Satellite::getY() {
+double Satellite::getY() const {
     return y;
 }
 
-int Satellite::getZ() {
+double Satellite::getZ() const {
     return z;
 }
 
@@ -43,10 +42,11 @@ void Satellite::update(double dt) {
     z += vz * dt;
 }
 
-double Satellite::distance(Satellite other) {
+double Satellite::distance(const Satellite& other) const {
     return sqrt(pow(other.getX() - this->x, 2) + pow(other.getY() - this->y, 2) + pow(other.getZ() - this->z, 2));
 }
 
-void Satellite::print() {
-    cout << "Satellite " << id << ": Position (" << x << ", " << y << ", " << z << ") Velocity (" << vx << ", " << vy << ", " << vz << ")" << endl;
+void Satellite::print() const {
+    std::cout << "Satellite " << id << ": Position (" << x << ", " << y << ", " << z << ") Velocity (" << vx << ", " << vy << ", "
+    << vz << ")" << std::endl;
 }
