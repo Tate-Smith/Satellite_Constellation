@@ -3,6 +3,7 @@
 *.exe
 *.out
 *.class
+simulation
 
 # Build folders
 /build/
