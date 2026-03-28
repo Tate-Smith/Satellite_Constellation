@@ -1,7 +1,7 @@
 /*
-File: Satellite
+File: Simulation
 Date Created: March 25th, 2026
-Last Updated: March 25th, 2026
+Last Updated: March 28th, 2026
 Purpose: This file runs the simulation with the time step, and updates all satellites accordingly
 */
 

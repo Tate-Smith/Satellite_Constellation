@@ -1,5 +1,5 @@
 /*
-File: Satellite
+File: Main
 Date Created: March 25th, 2026
 Last Updated: March 25th, 2026
 Purpose: This file runs the simulation with the time step, and updates all satellites accordingly
@@ -8,9 +8,11 @@ Purpose: This file runs the simulation with the time step, and updates all satel
 #include "../../src/core/Satellite.h"
 #include "../../src/core/Simulation.h"
 #include "../../src/network/NetworkManager.h"
+#include <unistd.h>
 using namespace std;
 
 int main(int argc, char* argv[]) {
+    std::cout << "STARTED" << std::endl;
     // make sure valid number of arguments are provided
     if (argc != 11) {
         cout << "Usage: " << argv[0] << " id x y z vx vy vz <my_port> <target_ip> <target_port>" << endl;
@@ -31,7 +33,10 @@ int main(int argc, char* argv[]) {
     networkManager.startServer(stoi(argv[8]));
 
     // send and recieve example message to the target peer
-    networkManager.connectToPeer(argv[9], stoi(argv[10]));
+    networkManager.setPeer(argv[9], stoi(argv[10]));
+    // sleep 5 seconds to allow both server and target peer start
+    sleep(5);
+    // send a message
     networkManager.sendMessage("Hello from satellite " + to_string(stoi(argv[1])));
     networkManager.receiveMessage();
 

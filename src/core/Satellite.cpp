@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 25th, 2026
+Last Updated: March 28th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -20,7 +20,7 @@ Satellite::Satellite(int id, double x, double y, double z, double vx, double vy,
     this->vz = vz;
 }
 
-int Satellite::getId() {
+int Satellite::getId() const{
     return id;
 }
 

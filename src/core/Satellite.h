@@ -15,7 +15,7 @@ class Satellite {
         Satellite(int id, double x, double y, double z, double vx, double vy, double vz);
 
         // getters
-        int getId();
+        int getId() const;
 
         double getX() const;
 
