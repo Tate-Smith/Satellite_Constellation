@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 28th, 2026
+Last Updated: March 30th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -10,7 +10,7 @@ information from other satellites and ground control
 #include "Satellite.h"
 #include <cmath>
 
-Satellite::Satellite(int id, double x, double y, double z, double vx, double vy, double vz) {
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -20,7 +20,7 @@ Satellite::Satellite(int id, double x, double y, double z, double vx, double vy,
     this->vz = vz;
 }
 
-int Satellite::getId() const{
+uint32_t Satellite::getId() const{
     return id;
 }
 
@@ -49,4 +49,24 @@ double Satellite::distance(const Satellite& other) const {
 void Satellite::print() const {
     std::cout << "Satellite " << id << ": Position (" << x << ", " << y << ", " << z << ") Velocity (" << vx << ", " << vy << ", "
     << vz << ")" << std::endl;
+}
+
+Message Satellite::createStatusMessage() const {
+    Message message;
+    message.type = MessageType::STATUS_UPDATE;
+    message.senderId = id;
+    message.x = x;
+    message.y = y;
+    message.z = z;
+    return message;
+}
+
+Message Satellite::createHeartbeatMessage() const {
+    Message message;
+    message.type = MessageType::HEARTBEAT;
+    message.senderId = id;
+    message.x = x;
+    message.y = y;
+    message.z = z;
+    return message;
 }
