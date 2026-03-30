@@ -1,8 +1,8 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: March 25th, 2026
-Purpose: This file runs the simulation with the time step, and updates all satellites accordingly
+Last Updated: March 28th, 2026
+Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
 
 #include "../../src/core/Satellite.h"
@@ -23,10 +23,7 @@ int main(int argc, char* argv[]) {
     Satellite satellite(stoi(argv[1]), stod(argv[2]), stod(argv[3]), stod(argv[4]), stod(argv[5]), stod(argv[6]), stod(argv[7]));
 
     // create a simulation with a time step of 1 second
-    Simulation sim(1);
-
-    // add the satellite to the simulation
-    sim.addSatellite(satellite);
+    Simulation sim(1, satellite);
 
     // create a network manager and start the server on the provided port
     NetworkManager networkManager;
@@ -36,12 +33,13 @@ int main(int argc, char* argv[]) {
     networkManager.setPeer(argv[9], stoi(argv[10]));
     // sleep 5 seconds to allow both server and target peer start
     sleep(5);
+
     // send a message
-    networkManager.sendMessage("Hello from satellite " + to_string(stoi(argv[1])));
+    networkManager.sendMessage(satellite.createStatusMessage());
     networkManager.receiveMessage();
 
     // run the simulation
-    sim.run();
+    sim.run(networkManager);
 
     return 0;
 }
