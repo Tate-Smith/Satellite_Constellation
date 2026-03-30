@@ -15,8 +15,6 @@ class NetworkManager {
     public:
         void startServer(int port);
         void setPeer(std::string ip, int port);
-        void sendMessage(const Message& message);
-        void receiveMessage();
 };
 
 #endif

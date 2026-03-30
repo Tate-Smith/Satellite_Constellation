@@ -57,37 +57,4 @@ void NetworkManager::setPeer(std::string ip, int port) {
         return;
     }
     std::cout << "Connected to peer: " << ip << ":" << port << std::endl;
-}   
-
-void NetworkManager::sendMessage(const Message& message) {
-    // function to send a message to another peer, sends the specified message to a neighbor, if it was negative then there was an error
-    // serialize the message into a byte
-    std::vector<std::uint8_t> msg = serializeMessage(message);
-    int sent = sendto(serverSocket, reinterpret_cast<const char*>(msg.data()), static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
-    if (sent < 0) {
-        std::cerr << "Error sending message" << std::endl;
-    } else {
-        std::cout << "Sent message to neighbor" << std::endl;
-    }
-}
-
-void NetworkManager::receiveMessage() {
-    // function to receive messages from other peers
-    // buffer to store the incoming message, and sockaddr_in stores senders address
-    char buffer[sizeof(Message)];
-    sockaddr_in senderAddr;
-    socklen_t addrLen = sizeof(senderAddr);
-    // zeroes out the senderAddr struct
-    memset(&senderAddr, 0, addrLen);
-
-    // blocks until a message is recieved, it stores the message in buffer, if it is negative then there was an error
-    int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrLen);
-    if (bytesReceived < 0) {
-        std::cerr << "Error receiving message" << std::endl;
-        return;
-    }
-    // deserialize the message and then print it
-    Message message = deserializeMessage(std::vector<std::uint8_t>(buffer, buffer + bytesReceived));
-    std::cout << "Received message: Satellite id: " << message.senderId 
-    << ", Position: (" << message.x << ", " << message.y << ", " << message.z << ")" << std::endl;
 }
