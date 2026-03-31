@@ -18,6 +18,7 @@ class ConnectionHandler {
         PeerConnection* getConnection(int peerId); // non-owning, may return nullptr
         void sendMessageToPeer(int peerId, const Message& message);
         void broadcastMessage(const Message& message); // send a message to all peers
+        void printAllPeers(); // prints all the satellites connected to this satellite
 };
 
 #endif

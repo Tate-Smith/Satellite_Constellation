@@ -2,8 +2,8 @@
 File: NetworkManager
 Date Created: March 28th, 2026
 Last Updated: March 31st, 2026
-Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network communication 
-between satellites. It can start a server, connect to peers, send messages, and receive messages.
+Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
+It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
 
 #include "NetworkManager.h"
@@ -63,10 +63,15 @@ void NetworkManager::acceptConnections(ConnectionHandler& handler) {
     // convert the bytes to a message
     Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
 
+    PeerConnection* peer = handler.getConnection(message.senderId);
+
     // add if not already known
-    if (!handler.getConnection(message.senderId)) {
+    if (!peer) {
         handler.addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
     }
+    else {
+        peer->heartbeat();
+    }
 
-    std::cout << "Message recieved from: " << message.senderId << std::endl;
+    std::cout << "Message received from: " << message.senderId << std::endl;
 }

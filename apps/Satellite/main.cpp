@@ -9,31 +9,24 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include "../../src/core/Simulation.h"
 #include "../../src/network/NetworkManager.h"
 #include <unistd.h>
-using namespace std;
 
 int main(int argc, char* argv[]) {
+    // usage: ./satellite id x y z vx vy vz myport peerIp1:port peerIp2:port peerIp3:port ...
     std::cout << "STARTED" << std::endl;
-    // make sure valid number of arguments are provided
-    if (argc != 10) {
-        cout << "Usage: " << argv[0] << " id x y z vx vy vz <my_port> <ip>" << endl;
-        return 1;
-    }
 
     // create a satellite with the provided arguments
-    Satellite satellite(stoi(argv[1]), stod(argv[2]), stod(argv[3]), stod(argv[4]), stod(argv[5]), stod(argv[6]), stod(argv[7]));
+    Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
+    std::stod(argv[7]));
 
-    // add connections to peers
-    if (stoi(argv[8]) == 5000) {
-        satellite.connectToPeer(argv[9], 5001, 2);
-        satellite.connectToPeer(argv[9], 5002, 3);
-    }
-    else if (stoi(argv[8]) == 5001) {
-        satellite.connectToPeer(argv[9], 5000, 1);
-        satellite.connectToPeer(argv[9], 5002, 3);
-    }
-    else if (stoi(argv[8]) == 5002) {
-        satellite.connectToPeer(argv[9], 5000, 1);
-        satellite.connectToPeer(argv[9], 5001, 2);
+    // parse remaining args and connect to them
+    for (int i = 10; i < argc; ++i) {
+        std::string arg = argv[i];
+        // get the ip and port from each arg
+        int colon = arg.find(":");
+        std::string ip = arg.substr(0, colon);
+        int port = std::stoi(arg.substr(colon + 1));
+        // connect to each port
+        satellite.connectToPeer(ip, port, i - 9);
     }
 
     // create a simulation with a time step of 1 second
@@ -41,7 +34,7 @@ int main(int argc, char* argv[]) {
 
     // create a network manager and start the server on the provided port
     NetworkManager networkManager;
-    networkManager.startServer(stoi(argv[8]));
+    networkManager.startServer(std::stoi(argv[8]));
 
     // run the simulation
     sim.run(networkManager);

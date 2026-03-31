@@ -3,7 +3,8 @@ File: ConnectionHandler
 Date Created: March 30th, 2026
 Last Updated: March 31st, 2026
 Author: Tate Smith
-Purpose: This file represents the handler for managing all peer connections in the network
+Purpose: This file represents the handler for managing all peer connections in the network, it can add and remove connections, 
+send messages to specific peers, and broadcast messages to all peers
 */
 
 #include "ConnectionHandler.h"
@@ -11,7 +12,8 @@ Purpose: This file represents the handler for managing all peer connections in t
 
 void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId) {
     // create a new connection and add it to the map
-    connections.emplace(peerId, PeerConnection(peerId, ip, port));
+    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port));
+    if (inserted) it->second.heartbeat();
 }
 
 void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int peerId) {
@@ -26,6 +28,13 @@ void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, i
 void ConnectionHandler::update() {
     // loop through every connection in the map, and if they are disconnected and outgoing try to reconnect
     for (auto& i : connections) {
+        // check if peers are disconnected
+        if (i.second.getState() == ConnectionState::CONNECTED && i.second.isTimedOut()) {
+            std::cout << "Peer: " << i.first << " has timed out" << std::endl;
+            i.second.disconnect();
+        }
+
+        // try to reconnect if disconnected
         if (i.second.getState() == ConnectionState::DISCONNECTED && i.second.getOutgoing()) {
             i.second.reconnect();
         }
@@ -60,5 +69,21 @@ void ConnectionHandler::broadcastMessage(const Message& message) {
         if (i.second.getState() == ConnectionState::CONNECTED) {
             i.second.sendMessage(message);
         }
+        else {
+            std::cout << "Peer: " << i.first << " Not connected, skipping message" << std::endl;
+        }
+    }
+}
+
+void ConnectionHandler::printAllPeers() {
+    std::cout << "Peers: " << std::endl;
+    for (auto& i : connections) {
+        std::string state;
+        switch(i.second.getState()) {
+            case CONNECTED: state = "CONNECTED"; break;
+            case CONNECTING: state = "CONNECTING"; break;
+            case DISCONNECTED: state = "DISCONNECTED"; break;
+        }
+        std::cout << "  Peer: " << i.first << ": " << state << std::endl;
     }
 }

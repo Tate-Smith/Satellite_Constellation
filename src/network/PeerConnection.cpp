@@ -3,7 +3,7 @@ File: PeerConnection
 Date Created: March 30th, 2026
 Last Updated: March 31st, 2026
 Author: Tate Smith
-Purpose: This file represents a connection to a peer in the network
+Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
 
 #include "PeerConnection.h"
@@ -16,7 +16,7 @@ Purpose: This file represents a connection to a peer in the network
 
 PeerConnection::PeerConnection(int id, const std::string& ip, int port) : 
 peerId(id), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
-lastHeartbeat(0), lastReconnect(0), retryCounter(0), isOutgoing(false) {}
+lastHeartbeat(time(nullptr)), lastReconnect(0), retryCounter(0), isOutgoing(false) {}
 
 void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
@@ -63,9 +63,9 @@ void PeerConnection::sendMessage(const Message& message) {
     int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), 
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     if (sent < 0) {
-        std::cerr << "Error sending message to: " << message.senderId << std::endl;
+        std::cerr << "Error sending message to: "  << peerId << std::endl;
     } else {
-        std::cout << "Sent message to neighbor: " << message.senderId << std::endl;
+        std::cout << "Sent message to neighbor: " << peerId << std::endl;
     }
 }
 
@@ -98,8 +98,9 @@ void PeerConnection::reconnect() {
     // get current time
     time_t curTime = time(nullptr);
     // check if the last reconnect attempt was over 5 seconds ago
-    if (curTime - this->lastReconnect <= 5) return;
+    if (curTime - this->lastReconnect < 5) return;
     this->lastReconnect = curTime;
+    this->lastHeartbeat = curTime;
     this->retryCounter++;
     std::cout << "Reconnecting to peer: " << this->peerId << "; Reconnect counter = " << this->retryCounter << std::endl;
     // clean up first
@@ -120,4 +121,8 @@ bool PeerConnection::getOutgoing() {
 void PeerConnection::setOutgoing(bool b) {
     // sets outgoing
     this->isOutgoing = b;
+}
+
+bool PeerConnection::isTimedOut() const {
+    return (time(nullptr) - lastHeartbeat) > 10;
 }

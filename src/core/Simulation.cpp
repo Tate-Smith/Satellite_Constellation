@@ -23,6 +23,9 @@ void Simulation::run(NetworkManager& networkManager) {
         if (i % 5 == 0) {
             satellite.getConnectionHandler()->broadcastMessage(satellite.createHeartbeatMessage());
         }
+        if (i % 10 == 0) {
+            satellite.getConnectionHandler()->printAllPeers();
+        }
         sleep(1);
         // increment i
         i++;

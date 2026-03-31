@@ -38,6 +38,7 @@ class PeerConnection {
         ConnectionState getState(); // get what the current state of the peer is
         bool getOutgoing(); // get whether this is an outgoing connection or not
         void setOutgoing(bool b); // set this as an outgoing connection
+        bool isTimedOut() const; // checks if the peer has timed out
 };
 
 #endif
