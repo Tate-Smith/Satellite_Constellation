@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: March 30th, 2026
+Last Updated: March 31st, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network communication 
 between satellites. It can start a server, connect to peers, send messages, and receive messages.
 */
@@ -43,18 +43,30 @@ void NetworkManager::startServer(int port) {
     std::cout << "Server started on port: " << port << std::endl;
 }   
 
-void NetworkManager::setPeer(std::string ip, int port) {
-    // function to connect to another peer using the specified IP and port
-    // zeroes out the peerAddr struct
-    memset(&peerAddr, 0, sizeof(peerAddr));
+void NetworkManager::acceptConnections(ConnectionHandler& handler) {
+    // function to connect to another peer using the ConnectionHandler
+    // buffer for the message
+    char buffer [sizeof(Message)];
+    sockaddr_in senderAddr;
+    socklen_t addrlen = sizeof(senderAddr);
+    // zeroes out the senderAddr struct
+    memset(&senderAddr, 0, addrlen);
 
-    // sets the port in network byte order
-    peerAddr.sin_family = AF_INET;
-    peerAddr.sin_port = htons(port);
-    // converts the ip into binary, and if its negative then there was an error
-    if (inet_pton(AF_INET, ip.c_str(), &peerAddr.sin_addr) <= 0) {
-        std::cerr << "Invalid address / Address not supported" << std::endl;
-        return;
+    // recieve bytes
+    int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
+    if (bytesReceived < 0) return;
+
+    // get the sender ip, and create or find a connection
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
+
+    // convert the bytes to a message
+    Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
+
+    // add if not already known
+    if (!handler.getConnection(message.senderId)) {
+        handler.addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
     }
-    std::cout << "Connected to peer: " << ip << ":" << port << std::endl;
+
+    std::cout << "Message recieved from: " << message.senderId << std::endl;
 }

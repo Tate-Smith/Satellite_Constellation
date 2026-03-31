@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: March 30th, 2026
+Last Updated: March 31st, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network
 */
@@ -19,8 +19,7 @@ peerId(id), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED),
 lastHeartbeat(0), lastReconnect(0), retryCounter(0), isOutgoing(false) {}
 
 void PeerConnection::connect() {
-    // this function connects to a peer, it create a socket and sats its state accordingly based on whether it 
-    // connects
+    // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
     this->peerSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (peerSocket < 0) {
         std::cerr << "Error creating socket for peer: " << peerId << std::endl;
@@ -30,7 +29,6 @@ void PeerConnection::connect() {
     // set state to connecting
     this->state = ConnectionState::CONNECTING;
 
-    sockaddr_in peerAddr;
     // zeroes out the peerAddr struct
     memset(&peerAddr, 0, sizeof(peerAddr));
     // sets the port in network byte order
@@ -54,21 +52,24 @@ void PeerConnection::disconnect() {
         close(this->peerSocket);
         this->peerSocket = -1;
     }
+
+    this->state = ConnectionState::DISCONNECTED;
 }
 
 void PeerConnection::sendMessage(const Message& message) {
     // function to send a message to another peer, sends the specified message to a neighbor, if it was negative then there was an error
     // serialize the message into a byte
     std::vector<std::uint8_t> msg = serializeMessage(message);
-    int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
+    int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), 
+    static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     if (sent < 0) {
-        std::cerr << "Error sending message" << std::endl;
+        std::cerr << "Error sending message to: " << message.senderId << std::endl;
     } else {
-        std::cout << "Sent message to neighbor" << std::endl;
+        std::cout << "Sent message to neighbor: " << message.senderId << std::endl;
     }
 }
 
-std::string PeerConnection::receiveMessage() {
+Message PeerConnection::receiveMessage() {
     // function to receive messages from other peers
     // buffer to store the incoming message, and sockaddr_in stores senders address
     char buffer[sizeof(Message)];
@@ -81,12 +82,10 @@ std::string PeerConnection::receiveMessage() {
     int bytesReceived = recvfrom(this->peerSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrLen);
     if (bytesReceived < 0) {
         std::cerr << "Error receiving message" << std::endl;
-        return;
+        return Message{};
     }
     // deserialize the message and then print it
-    Message message = deserializeMessage(std::vector<std::uint8_t>(buffer, buffer + bytesReceived));
-    std::cout << "Received message: Satellite id: " << message.senderId 
-    << ", Position: (" << message.x << ", " << message.y << ", " << message.z << ")" << std::endl;
+    return deserializeMessage(std::vector<std::uint8_t>(buffer, buffer + bytesReceived));
 }
 
 void PeerConnection::heartbeat() {
@@ -95,5 +94,30 @@ void PeerConnection::heartbeat() {
 }
 
 void PeerConnection::reconnect() {
+    // try to reestablish a connection with the peer
+    // get current time
+    time_t curTime = time(nullptr);
+    // check if the last reconnect attempt was over 5 seconds ago
+    if (curTime - this->lastReconnect <= 5) return;
+    this->lastReconnect = curTime;
+    this->retryCounter++;
+    std::cout << "Reconnecting to peer: " << this->peerId << "; Reconnect counter = " << this->retryCounter << std::endl;
+    // clean up first
+    PeerConnection::disconnect();
+    PeerConnection::connect();
+}
 
+ConnectionState PeerConnection::getState() {
+    // return the clients current state
+    return this->state;
+}
+
+bool PeerConnection::getOutgoing() {
+    // returns whether this is an outgoing connection
+    return this->isOutgoing;
+}
+
+void PeerConnection::setOutgoing(bool b) {
+    // sets outgoing
+    this->isOutgoing = b;
 }

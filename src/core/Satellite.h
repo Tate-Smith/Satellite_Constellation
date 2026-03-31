@@ -4,9 +4,11 @@
 #define SATELLITE_H
 #include <iostream>
 #include "../protocol/Message.h"
+#include "../network/ConnectionHandler.h"
 
 class Satellite {
     private:
+        ConnectionHandler handler;
         uint32_t id;
         double x, y, z;
         double vx, vy, vz;
@@ -24,6 +26,9 @@ class Satellite {
 
         double getZ() const;
 
+        // connect to a given peer
+        void connectToPeer(const std::string& ip, int port, uint32_t peerId);
+
         // update function
         void update(double dt);
 
@@ -38,6 +43,9 @@ class Satellite {
 
         // create a heartbeat message for this satellite
         Message createHeartbeatMessage() const;
+
+        // get the connection handler ptr
+        ConnectionHandler* getConnectionHandler();
 };
 
 #endif

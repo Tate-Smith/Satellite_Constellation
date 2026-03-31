@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 30th, 2026
+Last Updated: March 31st, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -36,10 +36,15 @@ double Satellite::getZ() const {
     return z;
 }
 
+void Satellite::connectToPeer(const std::string& ip, int port, uint32_t peerId) {
+    handler.addOutgoingConnection(port, ip, peerId);
+}
+
 void Satellite::update(double dt) {
     x += vx * dt;
     y += vy * dt;
     z += vz * dt;
+    handler.update();
 }
 
 double Satellite::distance(const Satellite& other) const {
@@ -69,4 +74,8 @@ Message Satellite::createHeartbeatMessage() const {
     message.y = y;
     message.z = z;
     return message;
+}
+
+ConnectionHandler* Satellite::getConnectionHandler() {
+    return &this->handler;
 }

@@ -8,17 +8,16 @@
 
 class ConnectionHandler {
     private:
-        std::unordered_map<int, PeerConnection> connections;
+        std::unordered_map<int, PeerConnection> connections; // where to store all peer connections
 
     public:
-        void addIncomingConnection(int socket, const std::string& ip, int peerId);
-        void addOutgoingConnection(int peerId, const std::string& ip, int port);
+        void addIncomingConnection(int port, const std::string& ip, int peerId); // another satellite trying to connect
+        void addOutgoingConnection(int port, const std::string& ip, int peerId); // connecting to another satellite
         void update();  // drives reconnection logic
         void removeConnection(int peerId);
         PeerConnection* getConnection(int peerId); // non-owning, may return nullptr
         void sendMessageToPeer(int peerId, const Message& message);
-        void broadcastMessage(const Message& message);
-        void reconnectPeer(int peerId);
+        void broadcastMessage(const Message& message); // send a message to all peers
 };
 
 #endif

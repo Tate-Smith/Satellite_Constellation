@@ -6,15 +6,15 @@
 #include <string>
 #include <netinet/in.h>
 #include "../protocol/Message.h"
+#include "ConnectionHandler.h"
 
 class NetworkManager {
     int serverSocket;
     sockaddr_in serverAddr;
-    sockaddr_in peerAddr;
 
     public:
-        void startServer(int port);
-        void setPeer(std::string ip, int port);
+        void startServer(int port); // starts a server on a given port
+        void acceptConnections(ConnectionHandler& handler); // accepts connections from peers to this port
 };
 
 #endif
