@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: March 28th, 2026
+Last Updated: March 31st, 2026
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
 
@@ -9,34 +9,34 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include "../../src/core/Simulation.h"
 #include "../../src/network/NetworkManager.h"
 #include <unistd.h>
-using namespace std;
 
 int main(int argc, char* argv[]) {
+    // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
     std::cout << "STARTED" << std::endl;
-    // make sure valid number of arguments are provided
-    if (argc != 11) {
-        cout << "Usage: " << argv[0] << " id x y z vx vy vz <my_port> <target_ip> <target_port>" << endl;
-        return 1;
-    }
 
     // create a satellite with the provided arguments
-    Satellite satellite(stoi(argv[1]), stod(argv[2]), stod(argv[3]), stod(argv[4]), stod(argv[5]), stod(argv[6]), stod(argv[7]));
+    Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
+    std::stod(argv[7]));
+
+    // parse remaining args and connect to them
+    for (int i = 10; i < argc; ++i) {
+        std::string arg = argv[i];
+        // get the ip and port from each arg
+        size_t firstColon = arg.find(":");
+        size_t secondColon = arg.find(":", firstColon + 1);
+        int peerId = std::stoi(arg.substr(0, firstColon));
+        std::string ip = arg.substr(firstColon + 1, secondColon - firstColon - 1);
+        int port = std::stoi(arg.substr(secondColon + 1));
+        // connect to each port
+        satellite.connectToPeer(ip, port, peerId);
+    }
 
     // create a simulation with a time step of 1 second
     Simulation sim(1, satellite);
 
     // create a network manager and start the server on the provided port
     NetworkManager networkManager;
-    networkManager.startServer(stoi(argv[8]));
-
-    // send and recieve example message to the target peer
-    networkManager.setPeer(argv[9], stoi(argv[10]));
-    // sleep 5 seconds to allow both server and target peer start
-    sleep(5);
-
-    // send a message
-    networkManager.sendMessage(satellite.createStatusMessage());
-    networkManager.receiveMessage();
+    networkManager.startServer(std::stoi(argv[8]));
 
     // run the simulation
     sim.run(networkManager);
