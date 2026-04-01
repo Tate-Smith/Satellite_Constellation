@@ -11,7 +11,7 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include <unistd.h>
 
 int main(int argc, char* argv[]) {
-    // usage: ./satellite id x y z vx vy vz myport peerIp1:port peerIp2:port peerIp3:port ...
+    // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
     std::cout << "STARTED" << std::endl;
 
     // create a satellite with the provided arguments
@@ -22,11 +22,13 @@ int main(int argc, char* argv[]) {
     for (int i = 10; i < argc; ++i) {
         std::string arg = argv[i];
         // get the ip and port from each arg
-        int colon = arg.find(":");
-        std::string ip = arg.substr(0, colon);
-        int port = std::stoi(arg.substr(colon + 1));
+        size_t firstColon = arg.find(":");
+        size_t secondColon = arg.find(":", firstColon + 1);
+        int peerId = std::stoi(arg.substr(0, firstColon));
+        std::string ip = arg.substr(firstColon + 1, secondColon - firstColon - 1);
+        int port = std::stoi(arg.substr(secondColon + 1));
         // connect to each port
-        satellite.connectToPeer(ip, port, i - 9);
+        satellite.connectToPeer(ip, port, peerId);
     }
 
     // create a simulation with a time step of 1 second

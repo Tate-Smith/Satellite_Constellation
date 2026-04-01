@@ -36,8 +36,8 @@ void NetworkManager::startServer(int port) {
     }
     // set a timeout to prevent blocking
     struct timeval timeout;
-    timeout.tv_sec = 1; // 1 second timeout
-    timeout.tv_usec = 0;
+    timeout.tv_sec = 0; 
+    timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
     std::cout << "Server started on port: " << port << std::endl;
@@ -71,6 +71,7 @@ void NetworkManager::acceptConnections(ConnectionHandler& handler) {
     }
     else {
         peer->heartbeat();
+        peer->markConnected();
     }
 
     std::cout << "Message received from: " << message.senderId << std::endl;

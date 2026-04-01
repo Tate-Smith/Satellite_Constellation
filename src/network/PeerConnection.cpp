@@ -16,7 +16,7 @@ Purpose: This file represents a connection to a peer in the network, and it can 
 
 PeerConnection::PeerConnection(int id, const std::string& ip, int port) : 
 peerId(id), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
-lastHeartbeat(time(nullptr)), lastReconnect(0), retryCounter(0), isOutgoing(false) {}
+lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), isOutgoing(false) {}
 
 void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
@@ -28,6 +28,7 @@ void PeerConnection::connect() {
 
     // set state to connecting
     this->state = ConnectionState::CONNECTING;
+    this->lastHeartbeat = time(nullptr);
 
     // zeroes out the peerAddr struct
     memset(&peerAddr, 0, sizeof(peerAddr));
@@ -40,9 +41,6 @@ void PeerConnection::connect() {
         std::cerr << "Invalid address / Address not supported for peer: " << peerId << std::endl;
         return;
     }
-
-    // set state to connected
-    this->state = ConnectionState::CONNECTED;
     std::cout << "Connected to peer: " << peerIp << ":" << peerPort << std::endl;
 }
 
@@ -54,6 +52,7 @@ void PeerConnection::disconnect() {
     }
 
     this->state = ConnectionState::DISCONNECTED;
+    this->lastReconnect = time(nullptr);
 }
 
 void PeerConnection::sendMessage(const Message& message) {
@@ -98,9 +97,8 @@ void PeerConnection::reconnect() {
     // get current time
     time_t curTime = time(nullptr);
     // check if the last reconnect attempt was over 5 seconds ago
-    if (curTime - this->lastReconnect < 5) return;
+    if (curTime - this->lastReconnect < 10) return;
     this->lastReconnect = curTime;
-    this->lastHeartbeat = curTime;
     this->retryCounter++;
     std::cout << "Reconnecting to peer: " << this->peerId << "; Reconnect counter = " << this->retryCounter << std::endl;
     // clean up first
@@ -124,5 +122,9 @@ void PeerConnection::setOutgoing(bool b) {
 }
 
 bool PeerConnection::isTimedOut() const {
-    return (time(nullptr) - lastHeartbeat) > 10;
+    return (time(nullptr) - lastHeartbeat) > 8;
+}
+
+void PeerConnection::markConnected() {
+    this->state = ConnectionState::CONNECTED;
 }

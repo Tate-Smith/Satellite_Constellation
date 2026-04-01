@@ -13,7 +13,10 @@ send messages to specific peers, and broadcast messages to all peers
 void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId) {
     // create a new connection and add it to the map
     auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port));
-    if (inserted) it->second.heartbeat();
+    if (inserted) {
+        it->second.heartbeat();
+        it->second.markConnected();
+    }
 }
 
 void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int peerId) {
@@ -35,7 +38,7 @@ void ConnectionHandler::update() {
         }
 
         // try to reconnect if disconnected
-        if (i.second.getState() == ConnectionState::DISCONNECTED && i.second.getOutgoing()) {
+        else if (i.second.getState() == ConnectionState::DISCONNECTED && i.second.getOutgoing()) {
             i.second.reconnect();
         }
     }
@@ -66,7 +69,8 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
 void ConnectionHandler::broadcastMessage(const Message& message) {
     // loop through all peers and send them a message
     for (auto& i : connections) {
-        if (i.second.getState() == ConnectionState::CONNECTED) {
+        if (i.second.getState() == ConnectionState::CONNECTED ||
+            i.second.getState() == ConnectionState::CONNECTING) {
             i.second.sendMessage(message);
         }
         else {
@@ -81,7 +85,7 @@ void ConnectionHandler::printAllPeers() {
         std::string state;
         switch(i.second.getState()) {
             case CONNECTED: state = "CONNECTED"; break;
-            case CONNECTING: state = "CONNECTING"; break;
+            case CONNECTING: state = "CONNECTING (attempting reconnect)"; break;
             case DISCONNECTED: state = "DISCONNECTED"; break;
         }
         std::cout << "  Peer: " << i.first << ": " << state << std::endl;

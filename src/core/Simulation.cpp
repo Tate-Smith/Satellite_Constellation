@@ -8,8 +8,9 @@ Purpose: This file runs the simulation with the time step, and updates all satel
 #include "Simulation.h"
 #include <unistd.h>
 
-Simulation::Simulation(double timeStep, const Satellite& satellite) 
-    : timeStep(timeStep), satellite(satellite) {}
+Simulation::Simulation(double timeStep, Satellite& satellite) 
+    : timeStep(timeStep), satellite(satellite) {
+}
 
 void Simulation::run(NetworkManager& networkManager) {
     int i = 0;
@@ -26,7 +27,7 @@ void Simulation::run(NetworkManager& networkManager) {
         if (i % 10 == 0) {
             satellite.getConnectionHandler()->printAllPeers();
         }
-        sleep(1);
+        usleep(100000);
         // increment i
         i++;
     }
