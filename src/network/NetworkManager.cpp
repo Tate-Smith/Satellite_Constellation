@@ -13,12 +13,12 @@ It can start a server, and accept connections from other peers, and it uses the 
 #include "../protocol/Message.h"
 #include "../protocol/Serializer.h"
 
-void NetworkManager::startServer(int port, const MessageQueue& queue) {
+NetworkManager::NetworkManager(MessageQueue &queue) : queue(queue) {}
+
+void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
     // creates an IPv4 UDP socket and returns a file descriptor for the socket
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    // this->queue = queue;
-    selector.addSocket(this->serverSocket);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
         std::cerr << "Error creating socket" << std::endl;

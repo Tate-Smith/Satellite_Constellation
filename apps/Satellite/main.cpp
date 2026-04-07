@@ -11,6 +11,13 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include <unistd.h>
 #include <thread>
 
+void broadcast(Satellite &satellite) {
+    while (true) {
+        satellite.getConnectionHandler()->broadcastMessage(satellite.createStatusMessage());
+        usleep(5000000);
+    }
+}
+
 int main(int argc, char* argv[]) {
     // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
     std::cout << "STARTED" << std::endl;
@@ -40,14 +47,15 @@ int main(int argc, char* argv[]) {
     std::thread simulationThread(&Simulation::run, &sim);
 
     // run a thread to listen for messages (network manager)
-    // NetworkManager networkManager;
+    MessageQueue queue;
+    NetworkManager networkManager(queue);
     // start a server for the network manager
-    // networkManager.startServer(std::stoi(argv[8]));
+    networkManager.startServer(std::stoi(argv[8]));
     // listen for connections
-    // std::thread(&NetworkManager::acceptConnections, &networkManager)
+    std::thread listenerThread(&NetworkManager::acceptConnections, &networkManager);
 
     // run a thread to send messages (connection handler through satelliet)
-    // satellite.getConnectionHandler()->broadcastMessage(satellite.createStatusMessage());
+    std::thread senderThread(&broadcast, std::ref(satellite));
 
     return 0;
 }
