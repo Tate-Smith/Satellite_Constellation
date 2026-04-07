@@ -96,7 +96,7 @@ void PeerConnection::reconnect() {
     // try to reestablish a connection with the peer
     // get current time
     time_t curTime = time(nullptr);
-    // check if the last reconnect attempt was over 5 seconds ago
+    // check if the last reconnect attempt was over 10 seconds ago
     if (curTime - this->lastReconnect < 10) return;
     this->lastReconnect = curTime;
     this->retryCounter++;

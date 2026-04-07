@@ -20,6 +20,7 @@ Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, doubl
     this->vz = vz;
 }
 
+// getters
 uint32_t Satellite::getId() const{
     return id;
 }
@@ -37,6 +38,10 @@ double Satellite::getZ() const {
 }
 
 void Satellite::connectToPeer(const std::string& ip, int port, uint32_t peerId) {
+    /*
+    This function takes in a const unmodifiable string address, a port number, and a peerid, it
+    then uses the connectionHandler object to add a new outgoing peer to the peers list
+    */
     handler.addOutgoingConnection(port, ip, peerId);
 }
 

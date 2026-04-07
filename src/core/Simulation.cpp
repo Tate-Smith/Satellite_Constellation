@@ -12,23 +12,11 @@ Simulation::Simulation(double timeStep, Satellite& satellite)
     : timeStep(timeStep), satellite(satellite) {
 }
 
-void Simulation::run(NetworkManager& networkManager) {
-    int i = 0;
+void Simulation::run() {
     while (true) {
-        // accept all incoming connections/messages
-        networkManager.acceptConnections(*satellite.getConnectionHandler());
         // update the satellite and print its position and velocity
         satellite.update(timeStep);
         satellite.print();
-        // send a heartbeat message to the target peer every 5 steps
-        if (i % 5 == 0) {
-            satellite.getConnectionHandler()->broadcastMessage(satellite.createHeartbeatMessage());
-        }
-        if (i % 10 == 0) {
-            satellite.getConnectionHandler()->printAllPeers();
-        }
         usleep(100000);
-        // increment i
-        i++;
     }
 }

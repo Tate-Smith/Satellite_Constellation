@@ -17,7 +17,7 @@ class Simulation {
 
         // Run function for the Simulation class, it runs an infinite loop that updates every satellite's position and velocity 
         //every time step
-        void run(NetworkManager& networkManager);
+        void run();
 };
 
 #endif
