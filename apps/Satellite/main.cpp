@@ -9,6 +9,7 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include "../../src/core/Simulation.h"
 #include "../../src/network/NetworkManager.h"
 #include <unistd.h>
+#include <thread>
 
 int main(int argc, char* argv[]) {
     // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
@@ -31,15 +32,22 @@ int main(int argc, char* argv[]) {
         satellite.connectToPeer(ip, port, peerId);
     }
 
+    // the main sepration of concerns, sim loop, listening for messages, sending messages
+
     // create a simulation with a time step of 1 second
     Simulation sim(1, satellite);
+    // run a simulation thread with the run() func
+    std::thread simulationThread(&Simulation::run, &sim);
 
-    // create a network manager and start the server on the provided port
-    NetworkManager networkManager;
-    networkManager.startServer(std::stoi(argv[8]));
+    // run a thread to listen for messages (network manager)
+    // NetworkManager networkManager;
+    // start a server for the network manager
+    // networkManager.startServer(std::stoi(argv[8]));
+    // listen for connections
+    // std::thread(&NetworkManager::acceptConnections, &networkManager)
 
-    // run the simulation
-    sim.run(networkManager);
+    // run a thread to send messages (connection handler through satelliet)
+    // satellite.getConnectionHandler()->broadcastMessage(satellite.createStatusMessage());
 
     return 0;
 }

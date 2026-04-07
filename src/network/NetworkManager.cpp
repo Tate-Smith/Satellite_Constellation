@@ -13,10 +13,12 @@ It can start a server, and accept connections from other peers, and it uses the 
 #include "../protocol/Message.h"
 #include "../protocol/Serializer.h"
 
-void NetworkManager::startServer(int port) {
+void NetworkManager::startServer(int port, const MessageQueue& queue) {
     // function to start a server on the specified port
     // creates an IPv4 UDP socket and returns a file descriptor for the socket
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    // this->queue = queue;
+    selector.addSocket(this->serverSocket);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
         std::cerr << "Error creating socket" << std::endl;
@@ -43,8 +45,8 @@ void NetworkManager::startServer(int port) {
     std::cout << "Server started on port: " << port << std::endl;
 }   
 
-void NetworkManager::acceptConnections(ConnectionHandler& handler) {
-    // function to connect to another peer using the ConnectionHandler
+void NetworkManager::acceptConnections() {
+    // function to connect to another peer
     // buffer for the message
     char buffer [sizeof(Message)];
     sockaddr_in senderAddr;
@@ -63,16 +65,8 @@ void NetworkManager::acceptConnections(ConnectionHandler& handler) {
     // convert the bytes to a message
     Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
 
-    PeerConnection* peer = handler.getConnection(message.senderId);
-
-    // add if not already known
-    if (!peer) {
-        handler.addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
-    }
-    else {
-        peer->heartbeat();
-        peer->markConnected();
-    }
+    // push message to the message queue
+    queue.push(message);
 
     std::cout << "Message received from: " << message.senderId << std::endl;
 }

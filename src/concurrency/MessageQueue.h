@@ -1,8 +1,12 @@
 // .h for the Message Queue class
 
+#ifndef MESSAGEQUEUE_H
+#define MESSAGEQUEUE_H
+
 #include <mutex>
 #include <queue>
 #include "../protocol/Message.h"
+#include <condition_variable>
 
 class MessageQueue {
     private:
@@ -15,3 +19,5 @@ class MessageQueue {
         Message waitAndPop(); // blocks until a message arrives and pops
         bool tryPop(Message& message); // returns if there is a message availble to pop
 };
+
+#endif

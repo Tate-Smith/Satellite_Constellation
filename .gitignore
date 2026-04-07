@@ -4,6 +4,7 @@
 *.out
 *.class
 satellite
+CMakeLists.txt
 
 # Build folders
 /build/
