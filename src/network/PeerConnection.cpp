@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: March 31st, 2026
+Last Updated: April 7th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */

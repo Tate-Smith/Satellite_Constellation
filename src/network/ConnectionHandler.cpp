@@ -10,6 +10,8 @@ send messages to specific peers, and broadcast messages to all peers
 #include "ConnectionHandler.h"
 #include <iostream>
 
+ConnectionHandler::ConnectionHandler(Logger *logger) : logger(logger) {}
+
 void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId) {
     // create a new connection and add it to the map
     auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port));

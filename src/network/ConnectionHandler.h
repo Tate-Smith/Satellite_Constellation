@@ -4,6 +4,7 @@
 #define CONNECTION_HANDLER_H
 
 #include "PeerConnection.h"
+#include "../logging/Logger.h"
 #include <unordered_map>
 
 class ConnectionHandler {

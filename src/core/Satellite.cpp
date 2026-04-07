@@ -10,7 +10,7 @@ information from other satellites and ground control
 #include "Satellite.h"
 #include <cmath>
 
-Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz) {
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, Logger *logger) : logger(logger) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -57,8 +57,9 @@ double Satellite::distance(const Satellite& other) const {
 }
 
 void Satellite::print() const {
-    std::cout << "Satellite " << id << ": Position (" << x << ", " << y << ", " << z << ") Velocity (" << vx << ", " << vy << ", "
-    << vz << ")" << std::endl;
+    std::string str = "Satellite " + std::to_string(id) + ": Position (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) 
+    + ") Velocity (" + std::to_string(vx) + ", " + std::to_string(vy) + ", " + std::to_string(vz) + ")";
+    logger->log(str);
 }
 
 Message Satellite::createStatusMessage() const {

@@ -7,15 +7,12 @@
 #include <netinet/in.h>
 #include "../protocol/Message.h"
 #include "ConnectionHandler.h"
-#include "../concurrency/MessageQueue.h"
 
 class NetworkManager {
     int serverSocket;
     sockaddr_in serverAddr;
-    MessageQueue& queue;
 
     public:
-        NetworkManager(MessageQueue &queue); // constructor
         void startServer(int port); // starts a server on a given port
         void acceptConnections(); // accepts connections from peers to this port
 };
