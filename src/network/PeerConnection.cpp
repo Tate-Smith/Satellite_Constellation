@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 7th, 2026
+Last Updated: April 8th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
@@ -14,15 +14,15 @@ Purpose: This file represents a connection to a peer in the network, and it can 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-PeerConnection::PeerConnection(int id, const std::string& ip, int port) : 
+PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue) : 
 peerId(id), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
-lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), isOutgoing(false) {}
+lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), isOutgoing(false), queue(queue) {}
 
 void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
     this->peerSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (peerSocket < 0) {
-        std::cerr << "Error creating socket for peer: " << peerId << std::endl;
+        queue->pushBack("Error creating socket for peer: " + std::to_string(peerId));
         return;
     }
 
@@ -38,10 +38,10 @@ void PeerConnection::connect() {
 
     // converts the ip into binary, and if its negative then there was an error
     if (inet_pton(AF_INET, peerIp.c_str(), &peerAddr.sin_addr) <= 0) {
-        std::cerr << "Invalid address / Address not supported for peer: " << peerId << std::endl;
+        queue->pushBack("Invalid address / Address not supported for peer: " + std::to_string(peerId));
         return;
     }
-    std::cout << "Connected to peer: " << peerIp << ":" << peerPort << std::endl;
+    queue->pushBack("Connected to peer: " + peerIp + ":" + std::to_string(peerPort));
 }
 
 void PeerConnection::disconnect() {
@@ -62,9 +62,9 @@ void PeerConnection::sendMessage(const Message& message) {
     int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), 
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     if (sent < 0) {
-        std::cerr << "Error sending message to: "  << peerId << std::endl;
+        queue->pushBack("Error sending message to: "  + std::to_string(peerId));
     } else {
-        std::cout << "Sent message to neighbor: " << peerId << std::endl;
+        queue->pushBack("Sent message to neighbor: " + std::to_string(peerId));
     }
 }
 
@@ -80,7 +80,7 @@ Message PeerConnection::receiveMessage() {
     // blocks until a message is recieved, it stores the message in buffer, if it is negative then there was an error
     int bytesReceived = recvfrom(this->peerSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrLen);
     if (bytesReceived < 0) {
-        std::cerr << "Error receiving message" << std::endl;
+        queue->pushBack("Error receiving message");
         return Message{};
     }
     // deserialize the message and then print it
@@ -100,7 +100,7 @@ void PeerConnection::reconnect() {
     if (curTime - this->lastReconnect < 10) return;
     this->lastReconnect = curTime;
     this->retryCounter++;
-    std::cout << "Reconnecting to peer: " << this->peerId << "; Reconnect counter = " << this->retryCounter << std::endl;
+    queue->pushBack("Reconnecting to peer: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
     PeerConnection::disconnect();
     PeerConnection::connect();

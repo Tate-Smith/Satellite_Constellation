@@ -5,13 +5,16 @@
 
 #include "PeerConnection.h"
 #include "../logging/Logger.h"
+#include "../concurrency/MessageQueue.h"
 #include <unordered_map>
 
 class ConnectionHandler {
     private:
         std::unordered_map<int, PeerConnection> connections; // where to store all peer connections
+        MessageQueue *queue;
 
     public:
+        ConnectionHandler(MessageQueue *queue); // constructor to instialize the queue
         void addIncomingConnection(int port, const std::string& ip, int peerId); // another satellite trying to connect
         void addOutgoingConnection(int port, const std::string& ip, int peerId); // connecting to another satellite
         void update();  // drives reconnection logic

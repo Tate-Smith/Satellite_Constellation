@@ -5,7 +5,7 @@
 #include <iostream>
 #include "../protocol/Message.h"
 #include "../network/ConnectionHandler.h"
-#include "../logging/Logger.h"
+#include "../concurrency/MessageQueue.h"
 
 class Satellite {
     private:
@@ -13,11 +13,11 @@ class Satellite {
         uint32_t id;
         double x, y, z;
         double vx, vy, vz;
-        Logger *logger;
+        MessageQueue *queue;
 
     public:
         // constructor
-        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, Logger *logger);
+        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue);
 
         // getters
         uint32_t getId() const;

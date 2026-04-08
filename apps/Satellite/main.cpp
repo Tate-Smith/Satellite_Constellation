@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: April 7th, 2026
+Last Updated: April 8th, 2026
 Author: Tate Smith
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
@@ -10,6 +10,7 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include "../../src/core/Simulation.h"
 #include "../../src/network/NetworkManager.h"
 #include "../../src/logging/Logger.h"
+#include "../../src/concurrency/MessageQueue.h"
 #include <unistd.h>
 #include <thread>
 #include <csignal>
@@ -20,9 +21,15 @@ void signalHandler(int sig) {
 }
 
 void broadcast(Satellite &satellite) {
+    int i = 0;
     while (true) {
-        satellite.getConnectionHandler()->broadcastMessage(satellite.createStatusMessage());
+        ConnectionHandler *handler = satellite.getConnectionHandler();
+        handler->broadcastMessage(satellite.createStatusMessage());
         usleep(5000000);
+        if (i % 2 == 0) {
+            handler->printAllPeers();
+        }
+        ++i;
     }
 }
 
@@ -30,12 +37,16 @@ int main(int argc, char* argv[]) {
     // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
     std::cout << "STARTED" << std::endl;
 
-    // create a logger object and pass it to the satellite
-    Logger logger("Satelite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt");
+    // create a message queue object for th elogger to recieve info
+    MessageQueue queue;
+    queue.pushBack("Logger started."); // push message to know that its working
+
+    // create a logger object
+    Logger logger("Satelite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
 
     // create a satellite with the provided arguments
     Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
-    std::stod(argv[7]), &logger);
+    std::stod(argv[7]), &queue);
 
     // parse remaining args and connect to them
     for (int i = 10; i < argc; ++i) {
@@ -50,7 +61,7 @@ int main(int argc, char* argv[]) {
         satellite.connectToPeer(ip, port, peerId);
     }
 
-    // the main sepration of concerns, sim loop, listening for messages, sending messages
+    // the main sepration of concerns, sim loop, listening for messages, sending messages, logger
 
     // create a simulation with a time step of 1 second
     Simulation sim(1, satellite);
@@ -58,20 +69,23 @@ int main(int argc, char* argv[]) {
     std::thread simulationThread(&Simulation::run, &sim);
 
     // run a thread to listen for messages (network manager)
-    NetworkManager networkManager;
+    NetworkManager networkManager(&queue);
     // start a server for the network manager
     networkManager.startServer(std::stoi(argv[8]));
     // listen for connections
-    std::thread listenerThread(&NetworkManager::acceptConnections, &networkManager);
+    std::thread listenerThread(&NetworkManager::acceptConnections, &networkManager, satellite.getConnectionHandler());
 
     // run a thread to send messages (connection handler through satelliet)
     std::thread senderThread(&broadcast, std::ref(satellite));
+
+    // run a logger thread
+    std::thread loggerThread(&Logger::log, &logger);
 
     // handle signal
     signal(SIGINT, signalHandler);
 
     // loop continuously until user kills the program
-    while (true) usleep(10000); 
+    while (true) usleep(10000);  // 0.01 seconds
 
     return 0;
 }

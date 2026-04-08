@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 31st, 2026
+Last Updated: April 8th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -10,7 +10,7 @@ information from other satellites and ground control
 #include "Satellite.h"
 #include <cmath>
 
-Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, Logger *logger) : logger(logger) {
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue) : handler(queue), queue(queue) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -52,14 +52,11 @@ void Satellite::update(double dt) {
     handler.update();
 }
 
-double Satellite::distance(const Satellite& other) const {
-    return sqrt(pow(other.getX() - this->x, 2) + pow(other.getY() - this->y, 2) + pow(other.getZ() - this->z, 2));
-}
-
 void Satellite::print() const {
     std::string str = "Satellite " + std::to_string(id) + ": Position (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) 
     + ") Velocity (" + std::to_string(vx) + ", " + std::to_string(vy) + ", " + std::to_string(vz) + ")";
-    logger->log(str);
+    // push the string onto the loggers message queue
+    queue->pushBack(str);
 }
 
 Message Satellite::createStatusMessage() const {

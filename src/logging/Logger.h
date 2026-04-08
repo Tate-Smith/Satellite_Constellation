@@ -5,15 +5,17 @@
 
 #include <string>
 #include <fstream>
+#include "../concurrency/MessageQueue.h"
 
 class Logger {
     private:
         std::ofstream file;
+        MessageQueue *queue;
 
     public:
-        Logger(const std::string &name); // constructor that takes in a string fro the name of the file
+        Logger(const std::string &name, MessageQueue *queue); // constructor that takes in a string for the name of the file, and the messageQueue
         ~Logger(); // destructor to close the file at the end
-        void log(const std::string &message); // a function used to log messages
+        void log(); // a function used to log messages
 };
 
 #endif

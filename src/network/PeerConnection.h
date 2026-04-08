@@ -6,6 +6,7 @@
 #include <string>
 #include <ctime>
 #include "../protocol/Message.h"
+#include "../concurrency/MessageQueue.h"
 #include <netinet/in.h>
 
 enum ConnectionState {
@@ -26,9 +27,10 @@ class PeerConnection {
         int retryCounter; // amount of connects its tried
         bool isOutgoing; // if the peer was connected to by this satellite
         sockaddr_in peerAddr;
+        MessageQueue *queue;
 
     public:
-        PeerConnection(int id, const std::string& ip, int port); // constructor
+        PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue); // constructor
         void connect(); // connect to the given peer
         void disconnect(); // disconnect from the given peer
         void sendMessage(const Message& message); // send a message to this peer
