@@ -11,13 +11,14 @@
 
 class NetworkManager {
     int serverSocket;
+    int satId;
     sockaddr_in serverAddr;
-    MessageQueue& queue;
+    MessageQueue *queue;
 
     public:
-        NetworkManager(MessageQueue &queue); // constructor
+        NetworkManager(MessageQueue * queue, int satId); // constructor to initialize the queue
         void startServer(int port); // starts a server on a given port
-        void acceptConnections(); // accepts connections from peers to this port
+        void acceptConnections(ConnectionHandler *handler); // accepts connections from peers to this port
 };
 
 #endif

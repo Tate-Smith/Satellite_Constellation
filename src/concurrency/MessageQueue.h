@@ -1,23 +1,21 @@
-// .h for the Message Queue class
+// the .h file for a message queue object
 
-#ifndef MESSAGEQUEUE_H
-#define MESSAGEQUEUE_H
+#ifndef MESSAGE_QUEUE_H
+#define MESSAGE_QUEUE_H
 
-#include <mutex>
 #include <queue>
-#include "../protocol/Message.h"
-#include <condition_variable>
+#include <string>
+#include <mutex>
 
 class MessageQueue {
     private:
-        std::mutex mutex;
-        std::queue<Message> messageQueue;
-        std::condition_variable var;
+        std::queue<std::string> messageQueue;
+        std::mutex queueMutex;
 
     public:
-        void push(const Message& message); // to push messages onto the queue
-        Message waitAndPop(); // blocks until a message arrives and pops
-        bool tryPop(Message& message); // returns if there is a message availble to pop
+        std::string pop(); // this pops the first element of the queue and returns it
+        void pushBack(const std::string &message); // this pushes a new string to the back of the queue
+        bool hasMessages(); // this returns true if there are messages in the queue
 };
 
 #endif

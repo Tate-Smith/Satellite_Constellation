@@ -6,10 +6,10 @@
 #include <string>
 #include <ctime>
 #include "../protocol/Message.h"
+#include "../concurrency/MessageQueue.h"
 #include <netinet/in.h>
 
 enum ConnectionState {
-    CONNECTING,
     CONNECTED,
     DISCONNECTED
 };
@@ -17,6 +17,7 @@ enum ConnectionState {
 class PeerConnection {
     private:
         int peerId;
+        int satId;
         std::string peerIp;
         int peerPort; // the port each peer is listening on
         int peerSocket; // the socket that each peer listens on
@@ -26,13 +27,13 @@ class PeerConnection {
         int retryCounter; // amount of connects its tried
         bool isOutgoing; // if the peer was connected to by this satellite
         sockaddr_in peerAddr;
+        MessageQueue *queue;
 
     public:
-        PeerConnection(int id, const std::string& ip, int port); // constructor
+        PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId); // constructor
         void connect(); // connect to the given peer
         void disconnect(); // disconnect from the given peer
         void sendMessage(const Message& message); // send a message to this peer
-        Message receiveMessage(); // recieve a message from this peer
         void heartbeat(); // updates when the last heart beat was
         void reconnect(); // try to reconnect to the peer
         ConnectionState getState(); // get what the current state of the peer is

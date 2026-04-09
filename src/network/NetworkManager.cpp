@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: March 31st, 2026
+Last Updated: April 9th, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
@@ -13,7 +13,7 @@ It can start a server, and accept connections from other peers, and it uses the 
 #include "../protocol/Message.h"
 #include "../protocol/Serializer.h"
 
-NetworkManager::NetworkManager(MessageQueue &queue) : queue(queue) {}
+NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
 
 void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
@@ -21,7 +21,7 @@ void NetworkManager::startServer(int port) {
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
-        std::cerr << "Error creating socket" << std::endl;
+        queue->pushBack("Error creating socket");
         return;
     }
     // zeroes out the serverAddr struct
@@ -33,7 +33,7 @@ void NetworkManager::startServer(int port) {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     // binds the socket to a certain port to listen for messages, if it is negative then there was an error
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        std::cerr << "Error binding socket" << std::endl;
+        queue->pushBack("Error binding socket");
         return;
     }
     // set a timeout to prevent blocking
@@ -42,31 +42,41 @@ void NetworkManager::startServer(int port) {
     timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    std::cout << "Server started on port: " << port << std::endl;
+    queue->pushBack("Server started on port: " + std::to_string(port));
 }   
 
-void NetworkManager::acceptConnections() {
-    // function to connect to another peer
-    // buffer for the message
-    char buffer [sizeof(Message)];
-    sockaddr_in senderAddr;
-    socklen_t addrlen = sizeof(senderAddr);
-    // zeroes out the senderAddr struct
-    memset(&senderAddr, 0, addrlen);
+void NetworkManager::acceptConnections(ConnectionHandler *handler) {
+    while (true) {
+        // function to connect to another peer
+        // buffer for the message
+        char buffer [sizeof(Message)];
+        sockaddr_in senderAddr;
+        socklen_t addrlen = sizeof(senderAddr);
+        // zeroes out the senderAddr struct
+        memset(&senderAddr, 0, addrlen);
 
-    // recieve bytes
-    int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
-    if (bytesReceived < 0) return;
+        // recieve bytes
+        int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
+        if (bytesReceived < 0) continue;
 
-    // get the sender ip, and create or find a connection
-    char ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
+        // get the sender ip, and create or find a connection
+        char ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
-    // convert the bytes to a message
-    Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
+        // convert the bytes to a message
+        Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
 
-    // push message to the message queue
-    queue.push(message);
+        PeerConnection* peer = handler->getConnection(message.senderId);
 
-    std::cout << "Message received from: " << message.senderId << std::endl;
+        // add if not already known
+        if (!peer) {
+            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
+        }
+        else {
+            peer->heartbeat();
+            peer->markConnected();
+        }
+
+        queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
+    }
 }

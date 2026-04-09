@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: March 31st, 2026
+Last Updated: April 9th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -10,7 +10,7 @@ information from other satellites and ground control
 #include "Satellite.h"
 #include <cmath>
 
-Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz) {
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue) : handler(queue), queue(queue) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -42,7 +42,7 @@ void Satellite::connectToPeer(const std::string& ip, int port, uint32_t peerId) 
     This function takes in a const unmodifiable string address, a port number, and a peerid, it
     then uses the connectionHandler object to add a new outgoing peer to the peers list
     */
-    handler.addOutgoingConnection(port, ip, peerId);
+    handler.addOutgoingConnection(port, ip, peerId, this->id);
 }
 
 void Satellite::update(double dt) {
@@ -52,13 +52,11 @@ void Satellite::update(double dt) {
     handler.update();
 }
 
-double Satellite::distance(const Satellite& other) const {
-    return sqrt(pow(other.getX() - this->x, 2) + pow(other.getY() - this->y, 2) + pow(other.getZ() - this->z, 2));
-}
-
 void Satellite::print() const {
-    std::cout << "Satellite " << id << ": Position (" << x << ", " << y << ", " << z << ") Velocity (" << vx << ", " << vy << ", "
-    << vz << ")" << std::endl;
+    std::string str = "Satellite " + std::to_string(id) + ": Position (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) 
+    + ") Velocity (" + std::to_string(vx) + ", " + std::to_string(vy) + ", " + std::to_string(vz) + ")";
+    // push the string onto the loggers message queue
+    queue->pushBack(str);
 }
 
 Message Satellite::createStatusMessage() const {

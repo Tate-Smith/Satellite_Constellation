@@ -5,6 +5,7 @@
 *.class
 satellite
 CMakeLists.txt
+*_logger.txt
 
 # Build folders
 /build/
