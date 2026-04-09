@@ -13,7 +13,10 @@ It defines the structure of a message, including its type, sender ID, and conten
 
 enum MessageType : uint8_t {
     HEARTBEAT,
-    STATUS_UPDATE
+    STATUS_UPDATE,
+    ACKNOWLEDGE,
+    ADGJUSTMENT,
+    REQUEST
 };
 
 struct Message {
@@ -22,6 +25,23 @@ struct Message {
     double x;
     double y;
     double z;
+};
+
+struct Ack {
+
+};
+
+struct Adj {
+
+};
+
+struct Req {
+
+};
+
+struct GC_Message {
+    MessageType type;
+    std::variant<Ack, Adj, Req> data;
 };
 
 #endif
