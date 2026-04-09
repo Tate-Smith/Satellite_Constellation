@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 8th, 2026
+Last Updated: April 9th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -42,7 +42,7 @@ void Satellite::connectToPeer(const std::string& ip, int port, uint32_t peerId) 
     This function takes in a const unmodifiable string address, a port number, and a peerid, it
     then uses the connectionHandler object to add a new outgoing peer to the peers list
     */
-    handler.addOutgoingConnection(port, ip, peerId);
+    handler.addOutgoingConnection(port, ip, peerId, this->id);
 }
 
 void Satellite::update(double dt) {

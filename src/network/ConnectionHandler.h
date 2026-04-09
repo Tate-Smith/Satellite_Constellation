@@ -15,8 +15,8 @@ class ConnectionHandler {
 
     public:
         ConnectionHandler(MessageQueue *queue); // constructor to instialize the queue
-        void addIncomingConnection(int port, const std::string& ip, int peerId); // another satellite trying to connect
-        void addOutgoingConnection(int port, const std::string& ip, int peerId); // connecting to another satellite
+        void addIncomingConnection(int port, const std::string& ip, int peerId, int satId); // another satellite trying to connect
+        void addOutgoingConnection(int port, const std::string& ip, int peerId, int satId); // connecting to another satellite
         void update();  // drives reconnection logic
         void removeConnection(int peerId);
         PeerConnection* getConnection(int peerId); // non-owning, may return nullptr

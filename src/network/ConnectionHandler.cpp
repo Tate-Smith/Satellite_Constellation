@@ -1,7 +1,7 @@
 /*
 File: ConnectionHandler
 Date Created: March 30th, 2026
-Last Updated: April 8th, 2026
+Last Updated: April 9th, 2026
 Author: Tate Smith
 Purpose: This file represents the handler for managing all peer connections in the network, it can add and remove connections, 
 send messages to specific peers, and broadcast messages to all peers
@@ -12,18 +12,18 @@ send messages to specific peers, and broadcast messages to all peers
 
 ConnectionHandler::ConnectionHandler(MessageQueue *queue) : queue(queue) {}
 
-void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId) {
+void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId, int satId) {
     // create a new connection and add it to the map
-    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue));
+    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue, satId));
     if (inserted) {
         it->second.heartbeat();
         it->second.markConnected();
     }
 }
 
-void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int peerId) {
+void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int peerId, int satId) {
     // create a new connection and add it to the map, and connect to it if it works
-    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue));
+    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue, satId));
     if (inserted) {
         it->second.setOutgoing(true);
         it->second.connect();
@@ -36,7 +36,7 @@ void ConnectionHandler::update() {
         // check if peers are disconnected
         if (i.second.getState() == ConnectionState::CONNECTED && i.second.isTimedOut()) {
             // push message to logger queue
-            queue->pushBack("Peer: " + std::to_string(i.first) + " has timed out");
+            queue->pushBack("Satellite Id: " + std::to_string(i.first) + " has timed out");
             i.second.disconnect();
         }
 
@@ -64,7 +64,7 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
     auto peer = connections.find(peerId);
     if (peer == connections.end()) {
         // push message to logger queue
-        queue->pushBack("Peer: " + std::to_string(peerId) + " Not found");
+        queue->pushBack("Satellite Id: " + std::to_string(peerId) + " Not found");
         return;
     }
     peer->second.sendMessage(message);
@@ -73,13 +73,12 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
 void ConnectionHandler::broadcastMessage(const Message& message) {
     // loop through all peers and send them a message
     for (auto& i : connections) {
-        if (i.second.getState() == ConnectionState::CONNECTED ||
-            i.second.getState() == ConnectionState::CONNECTING) {
+        if (i.second.getState() == ConnectionState::CONNECTED) {
             i.second.sendMessage(message);
         }
         else {
             // push message to logger queue
-            queue->pushBack("Peer: " + std::to_string(i.first) + " Not connected, skipping message");
+            queue->pushBack("Satellite Id: " + std::to_string(i.first) + " Not connected, skipping message");
         }
     }
 }
@@ -89,10 +88,9 @@ void ConnectionHandler::printAllPeers() {
         std::string state;
         switch(i.second.getState()) {
             case CONNECTED: state = "CONNECTED"; break;
-            case CONNECTING: state = "CONNECTING (attempting reconnect)"; break;
             case DISCONNECTED: state = "DISCONNECTED"; break;
         }
         // push message to logger queue
-        queue->pushBack("Peer: " + std::to_string(i.first) + ": " + state);
+        queue->pushBack("Satellite Id " + std::to_string(i.first) + ": " + state);
     }
 }

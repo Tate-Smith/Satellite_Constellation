@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 8th, 2026
+Last Updated: April 9th, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
@@ -13,7 +13,7 @@ It can start a server, and accept connections from other peers, and it uses the 
 #include "../protocol/Message.h"
 #include "../protocol/Serializer.h"
 
-NetworkManager::NetworkManager(MessageQueue *queue) : queue(queue) {}
+NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
 
 void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
@@ -57,7 +57,7 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
 
         // recieve bytes
         int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
-        if (bytesReceived < 0) return;
+        if (bytesReceived < 0) continue;
 
         // get the sender ip, and create or find a connection
         char ip[INET_ADDRSTRLEN];
@@ -70,13 +70,13 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
 
         // add if not already known
         if (!peer) {
-            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
+            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
         }
         else {
             peer->heartbeat();
             peer->markConnected();
         }
 
-        queue->pushBack("Message received from: " + std::to_string(message.senderId));
+        queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
     }
 }

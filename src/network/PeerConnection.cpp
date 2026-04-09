@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 8th, 2026
+Last Updated: April 9th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
@@ -14,8 +14,8 @@ Purpose: This file represents a connection to a peer in the network, and it can 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue) : 
-peerId(id), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
+PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId) : 
+peerId(id), satId(satId), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
 lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), isOutgoing(false), queue(queue) {}
 
 void PeerConnection::connect() {
@@ -27,7 +27,6 @@ void PeerConnection::connect() {
     }
 
     // set state to connecting
-    this->state = ConnectionState::CONNECTING;
     this->lastHeartbeat = time(nullptr);
 
     // zeroes out the peerAddr struct
@@ -41,7 +40,15 @@ void PeerConnection::connect() {
         queue->pushBack("Invalid address / Address not supported for peer: " + std::to_string(peerId));
         return;
     }
-    queue->pushBack("Connected to peer: " + peerIp + ":" + std::to_string(peerPort));
+    // whenever it attempts to connect it needs to send a message to the peer first to establish a conenction
+    Message m;
+    m.type = MessageType::STATUS_UPDATE;
+    m.senderId = satId;
+    m.x = 0;
+    m.y = 0;
+    m.z = 0;
+    PeerConnection::sendMessage(m);
+    queue->pushBack("Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));
 }
 
 void PeerConnection::disconnect() {
@@ -64,27 +71,8 @@ void PeerConnection::sendMessage(const Message& message) {
     if (sent < 0) {
         queue->pushBack("Error sending message to: "  + std::to_string(peerId));
     } else {
-        queue->pushBack("Sent message to neighbor: " + std::to_string(peerId));
+        queue->pushBack("Sent message to Satellite Id: " + std::to_string(peerId));
     }
-}
-
-Message PeerConnection::receiveMessage() {
-    // function to receive messages from other peers
-    // buffer to store the incoming message, and sockaddr_in stores senders address
-    char buffer[sizeof(Message)];
-    sockaddr_in senderAddr;
-    socklen_t addrLen = sizeof(senderAddr);
-    // zeroes out the senderAddr struct
-    memset(&senderAddr, 0, addrLen);
-
-    // blocks until a message is recieved, it stores the message in buffer, if it is negative then there was an error
-    int bytesReceived = recvfrom(this->peerSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrLen);
-    if (bytesReceived < 0) {
-        queue->pushBack("Error receiving message");
-        return Message{};
-    }
-    // deserialize the message and then print it
-    return deserializeMessage(std::vector<std::uint8_t>(buffer, buffer + bytesReceived));
 }
 
 void PeerConnection::heartbeat() {
@@ -98,9 +86,11 @@ void PeerConnection::reconnect() {
     time_t curTime = time(nullptr);
     // check if the last reconnect attempt was over 10 seconds ago
     if (curTime - this->lastReconnect < 10) return;
-    this->lastReconnect = curTime;
     this->retryCounter++;
-    queue->pushBack("Reconnecting to peer: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
+    // if over 10 reconnect attempts skip ie peer is dead
+    if (this->retryCounter > 10) return;
+    this->lastReconnect = curTime;
+    queue->pushBack("Reconnecting to Satellite Id: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
     PeerConnection::disconnect();
     PeerConnection::connect();

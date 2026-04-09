@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: April 8th, 2026
+Last Updated: April 9th, 2026
 Author: Tate Smith
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
@@ -69,13 +69,13 @@ int main(int argc, char* argv[]) {
     std::thread simulationThread(&Simulation::run, &sim);
 
     // run a thread to listen for messages (network manager)
-    NetworkManager networkManager(&queue);
+    NetworkManager networkManager(&queue, std::stoi(argv[1]));
     // start a server for the network manager
     networkManager.startServer(std::stoi(argv[8]));
     // listen for connections
     std::thread listenerThread(&NetworkManager::acceptConnections, &networkManager, satellite.getConnectionHandler());
 
-    // run a thread to send messages (connection handler through satelliet)
+    // run a thread to send messages (connection handler through satellite)
     std::thread senderThread(&broadcast, std::ref(satellite));
 
     // run a logger thread
