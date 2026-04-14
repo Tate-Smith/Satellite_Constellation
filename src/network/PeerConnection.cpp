@@ -41,12 +41,12 @@ void PeerConnection::connect() {
         return;
     }
     // whenever it attempts to connect it needs to send a message to the peer first to establish a conenction
-    Message m;
-    m.type = MessageType::STATUS_UPDATE;
+    Heartbeat m{};
+    m.type = MessageType::HEARTBEAT;
     m.senderId = satId;
-    m.x = 0;
-    m.y = 0;
-    m.z = 0;
+    // get current time stamp
+    m.timestamp = time(nullptr);
+    m.alive = true;
     PeerConnection::sendMessage(m);
     queue->pushBack("Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));
 }
@@ -71,7 +71,8 @@ void PeerConnection::sendMessage(const Message& message) {
     if (sent < 0) {
         queue->pushBack("Error sending message to: "  + std::to_string(peerId));
     } else {
-        queue->pushBack("Sent message to Satellite Id: " + std::to_string(peerId));
+        if (peerId != 0) queue->pushBack("Sent message to Satellite Id: " + std::to_string(peerId));
+        else queue->pushBack("Sent message to Ground Control");
     }
 }
 

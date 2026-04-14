@@ -1,27 +1,19 @@
-/*
-File: NetworkManager
-Date Created: March 28th, 2026
-Last Updated: April 9th, 2026
-Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
-It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
-*/
-
-#include "NetworkManager.h"
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include "Receiver.h"
+#include <cstring>
 #include <iostream>
-#include "../protocol/Message.h"
-#include "../protocol/Serializer.h"
+#include "../../../src/protocol/Message.h"
+#include "../../../src/protocol/Serializer.h"
+#include <arpa/inet.h>
 
-NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
+int PORT = 8000; // always listening on port 8000
 
-void NetworkManager::startServer(int port) {
+void Receiver::startServer() {
     // function to start a server on the specified port
     // creates an IPv4 UDP socket and returns a file descriptor for the socket
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
-        queue->pushBack("Error creating socket");
+        std::cout << "Error creating socket" << std::endl;
         return;
     }
     // zeroes out the serverAddr struct
@@ -29,11 +21,11 @@ void NetworkManager::startServer(int port) {
 
     // configures the port with network byte order, and accepts connections from any interface
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
+    serverAddr.sin_port = htons(PORT);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     // binds the socket to a certain port to listen for messages, if it is negative then there was an error
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        queue->pushBack("Error binding socket");
+        std::cout << "Error binding socket" << std::endl;
         return;
     }
     // set a timeout to prevent blocking
@@ -42,10 +34,10 @@ void NetworkManager::startServer(int port) {
     timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    queue->pushBack("Server started on port: " + std::to_string(port));
+    std::cout << "Server started on port: " << PORT << std::endl;
 }   
 
-void NetworkManager::acceptConnections(ConnectionHandler *handler) {
+void Receiver::listen() {
     while (true) {
         // function to connect to another peer
         // buffer for the message
@@ -56,7 +48,7 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         memset(&senderAddr, 0, addrlen);
 
         // recieve bytes
-        int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
+        int bytesReceived = recvfrom(this->serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&senderAddr, &addrlen);
         if (bytesReceived < 0) continue;
 
         // get the sender ip, and create or find a connection
@@ -65,20 +57,24 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
 
         // convert the bytes to a message
         Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
-        PeerConnection* peer = handler->getConnection(message.senderId);
 
-        // add if not already known
-        if (!peer) {
-            // check if its ground control
-            if (message.senderId != 0) handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
-            else handler->addOutgoingConnection(8000, ip, 0, satId);
-        }
-        else {
-            peer->heartbeat();
-            peer->markConnected();
-        }
+        std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
 
-        if (message.senderId != 0) queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
-        else queue->pushBack("Message received from Ground Control");
+        // send an ack message back to the satellite to let it know that ground control recieved it
+        Ack m{};
+        m.senderId = 0;
+        m.type = MessageType::ACK;
+        m.received = true;
+
+        // function to send messages to the satellite
+        std::vector<std::uint8_t> msg = serializeMessage(message);
+        int sent = sendto(ntohs(senderAddr.sin_port), reinterpret_cast<const char*>(msg.data()), 
+        static_cast<int>(msg.size()), 0, (sockaddr*)&senderAddr, sizeof(senderAddr));
+        // check if there was an error sending the message
+        if (sent < 0) {
+            std::cout << "Error sending message" << std::endl;
+        } else {
+            std::cout <<  "Sent message to Satellite" << std::endl;
+        }
     }
 }

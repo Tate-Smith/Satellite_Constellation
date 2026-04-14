@@ -41,7 +41,7 @@ void ConnectionHandler::update() {
         }
 
         // try to reconnect if disconnected
-        else if (i.second.getState() == ConnectionState::DISCONNECTED && i.second.getOutgoing()) {
+        else if (i.second.getState() == ConnectionState::DISCONNECTED && i.second.getOutgoing() && i.first != 0) {
             i.second.reconnect();
         }
     }
@@ -73,24 +73,35 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
 void ConnectionHandler::broadcastMessage(const Message& message) {
     // loop through all peers and send them a message
     for (auto& i : connections) {
-        if (i.second.getState() == ConnectionState::CONNECTED) {
-            i.second.sendMessage(message);
-        }
-        else {
-            // push message to logger queue
-            queue->pushBack("Satellite Id: " + std::to_string(i.first) + " Not connected, skipping message");
+        // if its not the ground control
+        if (i.first != 0) {
+            if (i.second.getState() == ConnectionState::CONNECTED) {
+                i.second.sendMessage(message);
+            }
+            else {
+                // push message to logger queue
+                queue->pushBack("Satellite Id: " + std::to_string(i.first) + " Not connected, skipping message");
+            }
         }
     }
 }
 
 void ConnectionHandler::printAllPeers() {
     for (auto& i : connections) {
-        std::string state;
-        switch(i.second.getState()) {
-            case CONNECTED: state = "CONNECTED"; break;
-            case DISCONNECTED: state = "DISCONNECTED"; break;
+        if (i.first != 0) {
+            std::string state;
+            switch(i.second.getState()) {
+                case CONNECTED: state = "CONNECTED"; break;
+                case DISCONNECTED: state = "DISCONNECTED"; break;
+            }
+            // push message to logger queue
+            queue->pushBack("Satellite Id " + std::to_string(i.first) + ": " + state);
         }
-        // push message to logger queue
-        queue->pushBack("Satellite Id " + std::to_string(i.first) + ": " + state);
+        else {
+            switch(i.second.getState()) {
+                case CONNECTED: queue->pushBack("Connected to Ground"); break;
+                case DISCONNECTED: queue->pushBack("Disconnected from Ground"); break;
+            }
+        }
     }
 }

@@ -24,10 +24,12 @@ void broadcast(Satellite &satellite) {
     int i = 0;
     while (true) {
         ConnectionHandler *handler = satellite.getConnectionHandler();
-        handler->broadcastMessage(satellite.createStatusMessage());
-        usleep(5000000);
+        handler->broadcastMessage(satellite.createHeartbeatMessage());
+        usleep(5000000); // 5 seconds
         if (i % 2 == 0) {
             handler->printAllPeers();
+            // every 10 seconds send an update to ground control
+            handler->sendMessageToPeer(0, satellite.createStatusMessage());
         }
         ++i;
     }

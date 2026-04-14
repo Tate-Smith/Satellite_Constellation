@@ -1,16 +1,9 @@
-# Compiled binaries
-*.o
-*.exe
-*.out
-*.class
 satellite
 CMakeLists.txt
 *_logger.txt
-
-# Build folders
-/build/
-/bin/
-/dist/
+ground_control
+SatSetup.txt
+build/
 
 # vscode settings
 .vscode/

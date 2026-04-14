@@ -10,38 +10,35 @@ It defines the structure of a message, including its type, sender ID, and conten
 #define MESSAGE_H
 
 #include <cstdint>
+#include <ctime>
 
 enum MessageType : uint8_t {
     HEARTBEAT,
     STATUS_UPDATE,
-    ACKNOWLEDGE,
-    ADGJUSTMENT,
-    REQUEST
+    ACK
 };
 
 struct Message {
     MessageType type;
     uint32_t senderId;
-    double x;
-    double y;
-    double z;
 };
 
-struct Ack {
-
+struct Heartbeat : Message {
+    time_t timestamp;
+    bool alive;
 };
 
-struct Adj {
-
+struct Status_Message : Message {
+    int x;
+    int y;
+    int z;
+    int vx;
+    int vy;
+    int vz;
 };
 
-struct Req {
-
-};
-
-struct GC_Message {
-    MessageType type;
-    std::variant<Ack, Adj, Req> data;
+struct Ack : Message {
+    bool received;
 };
 
 #endif
