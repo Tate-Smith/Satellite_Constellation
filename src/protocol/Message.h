@@ -10,31 +10,31 @@ It defines the structure of a message, including its type, sender ID, and conten
 #define MESSAGE_H
 
 #include <cstdint>
-#include <ctime>
 
 enum MessageType : uint8_t {
-    HEARTBEAT,
-    STATUS_UPDATE,
-    ACK
+    HEARTBEAT = 1,
+    FILE_MSG = 2,
+    ACK = 3
+};
+
+struct Header {
+    MessageType type;
+    uint16_t size;
 };
 
 struct Message {
-    MessageType type;
-    uint32_t senderId;
+    Header header;
+    int32_t senderId;
 };
 
 struct Heartbeat : Message {
-    time_t timestamp;
+    int64_t timestamp;
     bool alive;
 };
 
-struct Status_Message : Message {
-    int x;
-    int y;
-    int z;
-    int vx;
-    int vy;
-    int vz;
+struct File_Msg : Message {
+    uint16_t len;
+    char data[4096];
 };
 
 struct Ack : Message {

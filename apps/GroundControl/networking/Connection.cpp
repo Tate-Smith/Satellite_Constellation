@@ -1,7 +1,7 @@
 /*
 File: Connection
 Date Created: April 9th, 2026
-Last Updated: April 9th, 2026
+Last Updated: April 15th, 2026
 Author: Tate Smith
 Purpose: This file handles connecting to a satellite and sending messages to it
 */
@@ -12,6 +12,7 @@ Purpose: This file handles connecting to a satellite and sending messages to it
 #include <sys/_endian.h>
 #include <Kernel/sys/_endian.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 Connection::Connection(int id, int port, std::string ip) : satSocket(-1), port(port), ip(ip) {}
 
@@ -37,8 +38,9 @@ void Connection::connect() {
 
     // whenever it attempts to connect it needs to send a message to the satellite first to establish a connection
     Heartbeat m;
-    m.type = MessageType::HEARTBEAT;
     m.senderId = 0;
+    m.header.type = MessageType::HEARTBEAT;
+    m.header.size = sizeof(m);
     // get current time stamp
     m.timestamp = time(nullptr);
     m.alive = true;
@@ -60,12 +62,19 @@ void Connection::sendMessage(const Message &message) {
 }
 
 GCConnectionState Connection::getState() {
-    // return the clients current state
+    // return the satellites current state
     return this->state;
 }
 
 void Connection::disconnect(){
+    // this function disconnects from a satellite, as long as the socket hasn't been closed already
+    if (this->satSocket >= 0) {
+        close(this->satSocket);
+        this->satSocket = -1;
+    }
 
+    this->state = GCConnectionState::DISCONNECTED;
+    this->lastReconnect = time(nullptr);
 }
 
 void Connection::heartbeat() {
@@ -74,7 +83,19 @@ void Connection::heartbeat() {
 }
 
 void Connection::reconnect() {
-
+    // try to reestablish a connection with the satellite
+    // get current time
+    time_t curTime = time(nullptr);
+    // check if the last reconnect attempt was over 10 seconds ago
+    if (curTime - this->lastReconnect < 10) return;
+    this->retryCounter++;
+    // if over 10 reconnect attempts skip ie satellite is dead
+    if (this->retryCounter > 10) return;
+    this->lastReconnect = curTime;
+    std::cout << "Reconnecting to Satellite Id: " << this->id << "; Reconnect counter = " << this->retryCounter << std::endl;
+    // clean up first
+    Connection::disconnect();
+    Connection::connect();
 }
 
 bool Connection::isTimedOut() const {
@@ -82,5 +103,5 @@ bool Connection::isTimedOut() const {
 }
 
 void Connection::markConnected() {
-    this->state = ConnectionState::CONNECTED;
+    this->state = GCConnectionState::CONNECTED;
 }

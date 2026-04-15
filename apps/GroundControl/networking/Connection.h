@@ -20,6 +20,10 @@ class Connection {
         int port; // the satellites port
         std::string ip; // ip address of the satellite
         sockaddr_in peerAddr;
+        GCConnectionState state; // what state the peer is in currently according to this satellite
+        time_t lastHeartbeat; // last time it sent a heartbeat message
+        time_t lastReconnect; // last time it tried connecting
+        int retryCounter; // amount of connects its tried
 
     public:
         Connection(int id, int port, std::string ip); // constructor with the satellites listening port

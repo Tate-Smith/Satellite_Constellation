@@ -20,15 +20,15 @@ void GCConnectionHandler::addOutgoingConnection(int port, const std::string& ip,
 void GCConnectionHandler::update() {
     // loop through every connection in the map, and if they are disconnected and outgoing try to reconnect
     for (auto& i : satellites) {
-        // check if peers are disconnected
-        if (i.second.getState() == ConnectionState::CONNECTED && i.second.isTimedOut()) {
+        // check if satellites are disconnected
+        if (i.second.getState() == GCConnectionState::CONNECTED && i.second.isTimedOut()) {
             // push message to logger queue
             std::cout << "Satellite Id: " << i.first << " has timed out" << std::endl;
             i.second.disconnect();
         }
 
         // try to reconnect if disconnected
-        else if (i.second.getState() == ConnectionState::DISCONNECTED && i.first != 0) {
+        else if (i.second.getState() == GCConnectionState::DISCONNECTED && i.first != 0) {
             i.second.reconnect();
         }
     }
@@ -47,7 +47,7 @@ Connection* GCConnectionHandler::getConnection(int satId) {
 }
 
 void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) {
-    // send a message to a specific peer
+    // send a message to a specific satellite
     auto peer = satellites.find(satId);
     if (peer == satellites.end()) {
         // push message to logger queue
@@ -58,17 +58,14 @@ void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) {
 }
 
 void GCConnectionHandler::broadcastMessage(const Message& message) {
-    // loop through all peers and send them a message
+    // loop through all Satellites and send them a message
     for (auto& i : satellites) {
-        // if its not the ground control
-        if (i.first != 0) {
-            if (i.second.getState() == ConnectionState::CONNECTED) {
-                i.second.sendMessage(message);
-            }
-            else {
-                // push message to logger queue
-                std::cout << "Satellite Id: " << i.first << " Not connected, skipping message" << std::endl;
-            }
+        if (i.second.getState() == GCConnectionState::CONNECTED) {
+            i.second.sendMessage(message);
+        }
+        else {
+            // push message to logger queue
+            std::cout << "Satellite Id: " << i.first << " Not connected, skipping message" << std::endl;
         }
     }
 }

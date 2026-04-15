@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 9th, 2026
+Last Updated: April 15th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -59,27 +59,15 @@ void Satellite::print() const {
     queue->pushBack(str);
 }
 
-Message Satellite::createStatusMessage() const {
-    Status_Message message{};
-    message.type = MessageType::STATUS_UPDATE;
-    message.senderId = id;
-    message.x = x;
-    message.y = y;
-    message.z = z;
-    message.vx = vx;
-    message.vy = vy;
-    message.vz = vz;
-    return message;
-}
-
 Message Satellite::createHeartbeatMessage() const {
-    Heartbeat message{};
-    message.type = MessageType::HEARTBEAT;
-    message.senderId = id;
+    Heartbeat m;
+    m.header.type = MessageType::HEARTBEAT;
+    m.header.size = sizeof(m);
+    m.senderId = id;
     // get current time stamp
-    message.timestamp = time(nullptr);
-    message.alive = true;
-    return message;
+    m.timestamp = time(nullptr);
+    m.alive = true;
+    return m;
 }
 
 ConnectionHandler* Satellite::getConnectionHandler() {

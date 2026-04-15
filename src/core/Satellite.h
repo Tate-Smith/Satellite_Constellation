@@ -34,14 +34,8 @@ class Satellite {
         // update function
         void update(double dt);
 
-        // get the distance of the satellite from another satellite
-        double distance(const Satellite& other) const;
-
         // print function, gets the id and position and velocity
         void print() const;
-
-        // create a status message for this satellite
-        Message createStatusMessage() const;
 
         // create a heartbeat message for this satellite
         Message createHeartbeatMessage() const;

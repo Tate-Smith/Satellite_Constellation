@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 9th, 2026
+Last Updated: April 15th, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
@@ -12,6 +12,8 @@ It can start a server, and accept connections from other peers, and it uses the 
 #include <iostream>
 #include "../protocol/Message.h"
 #include "../protocol/Serializer.h"
+
+int BUFFER = 2048;
 
 NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
 
@@ -49,7 +51,7 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
     while (true) {
         // function to connect to another peer
         // buffer for the message
-        char buffer [sizeof(Message)];
+        char buffer [BUFFER];
         sockaddr_in senderAddr;
         socklen_t addrlen = sizeof(senderAddr);
         // zeroes out the senderAddr struct
@@ -64,7 +66,8 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
         // convert the bytes to a message
-        Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
+        auto msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        Message& message = *msg;
         PeerConnection* peer = handler->getConnection(message.senderId);
 
         // add if not already known

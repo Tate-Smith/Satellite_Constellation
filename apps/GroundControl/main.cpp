@@ -35,7 +35,8 @@ void messageSatellite() {
     // send a basic heartbeat message
     Heartbeat m;
     m.senderId = 0;
-    m.type = MessageType::STATUS_UPDATE;
+    m.header.size = MessageType::HEARTBEAT;
+    m.header.size = sizeof(m);
     m.timestamp = time(nullptr);
     m.alive = true;
     map.at(id).sendMessage(m);
@@ -69,7 +70,7 @@ void connectToSatellites(std::string file) {
         int port = std::stoi(split[2]);
 
         // then connect to satellite
-        Connection sat = Connection(port, ip);
+        Connection sat = Connection(id, port, ip);
         sat.connect();
         map.emplace(id, sat); 
     }

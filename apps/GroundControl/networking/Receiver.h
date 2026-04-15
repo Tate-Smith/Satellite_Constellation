@@ -4,6 +4,7 @@
 #define RECIEVER_H
 
 #include <netinet/in.h>
+#include "GCConnectionHandler.h"
 
 class Receiver {
     private:
@@ -12,7 +13,7 @@ class Receiver {
 
     public:
         void startServer(); // starts a server on port 8000
-        void listen(); // listens for incmong messages
+        void listen(GCConnectionHandler *handler); // listens for incmong messages
 };
 
 #endif

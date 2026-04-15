@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 9th, 2026
+Last Updated: April 15th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
@@ -42,7 +42,8 @@ void PeerConnection::connect() {
     }
     // whenever it attempts to connect it needs to send a message to the peer first to establish a conenction
     Heartbeat m{};
-    m.type = MessageType::HEARTBEAT;
+    m.header.type = MessageType::HEARTBEAT;
+    m.header.size = sizeof(m);
     m.senderId = satId;
     // get current time stamp
     m.timestamp = time(nullptr);

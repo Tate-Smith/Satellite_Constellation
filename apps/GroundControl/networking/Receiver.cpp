@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 
 int PORT = 8000; // always listening on port 8000
+int BUFFER = 2048;
 
 void Receiver::startServer() {
     // function to start a server on the specified port
@@ -37,11 +38,11 @@ void Receiver::startServer() {
     std::cout << "Server started on port: " << PORT << std::endl;
 }   
 
-void Receiver::listen() {
+void Receiver::listen(GCConnectionHandler *handler) {
     while (true) {
         // function to connect to another peer
         // buffer for the message
-        char buffer [sizeof(Message)];
+        char buffer [BUFFER];
         sockaddr_in senderAddr;
         socklen_t addrlen = sizeof(senderAddr);
         // zeroes out the senderAddr struct
@@ -56,25 +57,28 @@ void Receiver::listen() {
         inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
         // convert the bytes to a message
-        Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
+        auto msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        Message& message = *msg;
+        Connection* satellite = handler->getConnection(message.senderId);
+
+       // add if not already known
+        if (!satellite) {
+            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
+        }
+        else {
+            // if know update connected status and heartbeat
+            satellite->heartbeat();
+            satellite->markConnected();
+        }
 
         std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
 
-        // send an ack message back to the satellite to let it know that ground control recieved it
-        Ack m{};
+        // send an ack message to the given satellite let it know the message was recieved
+        Ack m;
+        m.header.size = sizeof(m);
+        m.header.type = MessageType::ACK;
         m.senderId = 0;
-        m.type = MessageType::ACK;
         m.received = true;
-
-        // function to send messages to the satellite
-        std::vector<std::uint8_t> msg = serializeMessage(message);
-        int sent = sendto(ntohs(senderAddr.sin_port), reinterpret_cast<const char*>(msg.data()), 
-        static_cast<int>(msg.size()), 0, (sockaddr*)&senderAddr, sizeof(senderAddr));
-        // check if there was an error sending the message
-        if (sent < 0) {
-            std::cout << "Error sending message" << std::endl;
-        } else {
-            std::cout <<  "Sent message to Satellite" << std::endl;
-        }
+        handler->sendMessageToSat(message.senderId, m);
     }
 }
