@@ -40,6 +40,8 @@ class Satellite {
         // create a heartbeat message for this satellite
         Message createHeartbeatMessage() const;
 
+        Message createdataDump() const;
+
         // get the connection handler ptr
         ConnectionHandler* getConnectionHandler();
 };

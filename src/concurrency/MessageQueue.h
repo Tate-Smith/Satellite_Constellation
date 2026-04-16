@@ -13,9 +13,8 @@ class MessageQueue {
         std::mutex queueMutex;
 
     public:
-        std::string pop(); // this pops the first element of the queue and returns it
+        std::optional<std::string> tryPop(); // this pops the first element of the queue and returns it, if it contains messages
         void pushBack(const std::string &message); // this pushes a new string to the back of the queue
-        bool hasMessages(); // this returns true if there are messages in the queue
 };
 
 #endif

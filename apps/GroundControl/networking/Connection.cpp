@@ -14,7 +14,7 @@ Purpose: This file handles connecting to a satellite and sending messages to it
 #include <arpa/inet.h>
 #include <unistd.h>
 
-Connection::Connection(int id, int port, std::string ip) : satSocket(-1), port(port), ip(ip) {}
+Connection::Connection(int id, int port, std::string ip) : id(id), satSocket(-1), port(port), ip(ip) {}
 
 void Connection::connect() {
     // function to connect to a satellite
@@ -40,15 +40,15 @@ void Connection::connect() {
     Heartbeat m;
     m.senderId = 0;
     m.header.type = MessageType::HEARTBEAT;
-    m.header.size = sizeof(m);
     // get current time stamp
     m.timestamp = time(nullptr);
     m.alive = true;
+    m.header.size = sizeof(m);
     Connection::sendMessage(m);
-    std::cout << "Connecting to Satellite at address: " << ip << ":" << std::to_string(port) << std::endl;
+    std::cout << "Connecting to Satellite " << this->id << ", at address: " << ip << ":" << std::to_string(port) << std::endl;
 }
 
-void Connection::sendMessage(const Message &message) {
+void Connection::sendMessage(const Message &message) const {
     // function to send messages to the satellite
     std::vector<std::uint8_t> msg = serializeMessage(message);
     int sent = sendto(this->satSocket, reinterpret_cast<const char*>(msg.data()), 

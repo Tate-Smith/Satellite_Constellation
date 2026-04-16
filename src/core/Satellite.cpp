@@ -70,6 +70,32 @@ Message Satellite::createHeartbeatMessage() const {
     return m;
 }
 
+Message Satellite::createdataDump() const {
+    // this is the function that the satellite uses to send all of its file data down to the GC
+    // open the file
+    std::string filename = "Satelite_" + std::to_string(this->id) + "_logger.txt";
+    std::ifstream file(filename , std::ios::binary);
+
+    // makesure it opened succesfully
+    if (!file) {
+        std::cerr << "File failed to open" << std::endl;
+        exit(1);
+    }
+
+    // create message and return it
+    File_Msg m;
+    m.header.type = MessageType::FILE_MSG;
+    m.senderId = this->id;
+    file.read(m.data, sizeof(m.data));
+    m.len = file.gcount();
+    m.header.size = sizeof(m);
+
+    // clear the file
+    file.clear();
+
+    return m;
+}
+
 ConnectionHandler* Satellite::getConnectionHandler() {
     return &this->handler;
 }

@@ -1,15 +1,7 @@
 #include "GCConnectionHandler.h"
 #include <iostream>
 
-void GCConnectionHandler::addIncomingConnection(int port, const std::string& ip, int satId) {
-    // create a new connection and add it to the map
-    auto [it, inserted] = satellites.emplace(satId, Connection(satId, port, ip));
-    if (inserted) {
-        it->second.heartbeat();
-    }
-}
-
-void GCConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int satId) {
+void GCConnectionHandler::addConnection(int port, const std::string& ip, int satId) {
     // create a new connection and add it to the map, and connect to it if it works
     auto [it, inserted] = satellites.emplace(satId, Connection(satId, port, ip));
     if (inserted) {
@@ -46,15 +38,15 @@ Connection* GCConnectionHandler::getConnection(int satId) {
     return &it->second;
 }
 
-void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) {
+void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) const {
     // send a message to a specific satellite
-    auto peer = satellites.find(satId);
-    if (peer == satellites.end()) {
+    auto satellite = satellites.find(satId);
+    if (satellite == satellites.end()) {
         // push message to logger queue
         std::cout << "Satellite Id: " << satId << " Not found" << std::endl;
         return;
     }
-    peer->second.sendMessage(message);
+    satellite->second.sendMessage(message);
 }
 
 void GCConnectionHandler::broadcastMessage(const Message& message) {

@@ -8,9 +8,9 @@ Purpose: This file represents a message queue for multiple different threads to 
 
 #include "MessageQueue.h"
 
-std::string MessageQueue::pop() {
+std::optional<std::string> MessageQueue::tryPop() {
     const std::lock_guard<std::mutex> lock(this->queueMutex);
-    // get the fornt element of the queue
+    // get the front element of the queue
     std::string element = this->messageQueue.front();
     // pop that element
     this->messageQueue.pop();
@@ -20,9 +20,4 @@ std::string MessageQueue::pop() {
 void MessageQueue::pushBack(const std::string &message) {
     const std::lock_guard<std::mutex> lock(this->queueMutex);
     this->messageQueue.push(message);
-}
-
-bool MessageQueue::hasMessages() {
-    if (this->messageQueue.size() > 0) return true;
-    return false;
 }

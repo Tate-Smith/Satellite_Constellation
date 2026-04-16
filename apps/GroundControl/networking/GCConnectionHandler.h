@@ -11,12 +11,11 @@ class GCConnectionHandler {
         std::unordered_map<int, Connection> satellites; // where to store all peer connections
 
     public:
-        void addIncomingConnection(int port, const std::string& ip, int satId); // a satellite trying to connect
-        void addOutgoingConnection(int port, const std::string& ip, int satId); // connecting to a satellite
+        void addConnection(int port, const std::string& ip, int satId); // connecting to a satellite
         void update();  // drives reconnection logic
         void removeConnection(int satId);
         Connection* getConnection(int satId); // non-owning, may return nullptr
-        void sendMessageToSat(int satId, const Message& message);
+        void sendMessageToSat(int satId, const Message& message) const;
         void broadcastMessage(const Message& message); // send a message to all peers
         void printAllSats(); // prints all the satellites connected to this satellite
 };

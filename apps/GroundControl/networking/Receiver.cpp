@@ -63,7 +63,7 @@ void Receiver::listen(GCConnectionHandler *handler) {
 
        // add if not already known
         if (!satellite) {
-            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
+            handler->addConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
         }
         else {
             // if know update connected status and heartbeat
@@ -72,6 +72,11 @@ void Receiver::listen(GCConnectionHandler *handler) {
         }
 
         std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
+
+        // decide what to do with the message
+        if (message.header.type == 2) {
+            // if it is a file dump
+        }
 
         // send an ack message to the given satellite let it know the message was recieved
         Ack m;

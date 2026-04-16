@@ -28,7 +28,7 @@ class Connection {
     public:
         Connection(int id, int port, std::string ip); // constructor with the satellites listening port
         void connect(); // function to connect to the satellite
-        void sendMessage(const Message &messsage); // function to send messages to the satellite
+        void sendMessage(const Message &messsage) const; // function to send messages to the satellite
         GCConnectionState getState(); // get what the current state of the peer is
         void disconnect(); // disconnect from the given satellite
         void heartbeat(); // updates when the last heart beat was

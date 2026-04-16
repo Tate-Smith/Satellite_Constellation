@@ -10,6 +10,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <iostream>
 
 template<typename T>
 requires std::derived_from<T, Message>
@@ -39,24 +40,6 @@ T deserializeMessage(const uint8_t* buf, size_t size) {
     return obj;
 }
 
-std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
-    // make sure the buffer is big enough
-    if (size < sizeof(Header)) throw std::runtime_error("Buffer too small for header.");
-    const Header* head = reinterpret_cast<const Header*>(buf);
-
-    if (size < head->size) throw std::runtime_error("Buffer too small for message.");
-
-    // figure out which type of message it is
-    switch (head->type) {
-        case HEARTBEAT:
-            return std::make_unique<Heartbeat>(deserializeMessage<Heartbeat>(buf, size));
-        case FILE_MSG:
-            return std::make_unique<File_Msg>(deserializeMessage<File_Msg>(buf, size));
-        case ACK:
-            return std::make_unique<Ack>(deserializeMessage<Ack>(buf, size));
-        default:
-            throw std::runtime_error("Unknown message type");
-    }
-}
+std::unique_ptr<Message> decode(const uint8_t* buf, size_t size);
 
 #endif

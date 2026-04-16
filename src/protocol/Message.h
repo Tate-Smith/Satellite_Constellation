@@ -17,10 +17,12 @@ enum MessageType : uint8_t {
     ACK = 3
 };
 
+#pragma pack(push, 1)
 struct Header {
-    MessageType type;
-    uint16_t size;
+    uint8_t type;
+    uint32_t size;
 };
+#pragma pack(pop)
 
 struct Message {
     Header header;
@@ -33,8 +35,8 @@ struct Heartbeat : Message {
 };
 
 struct File_Msg : Message {
-    uint16_t len;
     char data[4096];
+    int16_t len;
 };
 
 struct Ack : Message {

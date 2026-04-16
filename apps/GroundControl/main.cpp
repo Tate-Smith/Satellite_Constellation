@@ -17,32 +17,32 @@ satellites and every once in a while send course adjustments
 #include <sstream>
 #include <unordered_map>
 #include "networking/Receiver.h"
+#include "networking/GCConnectionHandler.h"
 #include <thread>
-
-// global unordered map to get all satellites connections by id
-std::unordered_map<int, Connection> map;
 
 void signalHandler(int sig) {
     // a function to handle the SIGINT signal
     exit(0);
 }
 
-void messageSatellite() {
-    // get the satellite id that the message is to be sent to
-    int id;
-    std::cout << "Satellite Id? ";
-    std::cin >> id;
-    // send a basic heartbeat message
-    Heartbeat m;
-    m.senderId = 0;
-    m.header.size = MessageType::HEARTBEAT;
-    m.header.size = sizeof(m);
-    m.timestamp = time(nullptr);
-    m.alive = true;
-    map.at(id).sendMessage(m);
+void messageSatellite(const GCConnectionHandler &handler) {
+    while (true) {
+        // get the satellite id that the message is to be sent to
+        int id;
+        std::cout << "Satellite Id? ";
+        std::cin >> id;
+        // send a basic heartbeat message
+        Heartbeat m;
+        m.senderId = 0;
+        m.header.size = MessageType::HEARTBEAT;
+        m.header.size = sizeof(m);
+        m.timestamp = time(nullptr);
+        m.alive = true;
+        handler.sendMessageToSat(id, m);
+    }
 }
 
-void connectToSatellites(std::string file) {
+void connectToSatellites(std::string file, GCConnectionHandler handler) {
     // this function goes through the file line by line and trys to connect to each satelite 
     /*
     File format:
@@ -70,9 +70,7 @@ void connectToSatellites(std::string file) {
         int port = std::stoi(split[2]);
 
         // then connect to satellite
-        Connection sat = Connection(id, port, ip);
-        sat.connect();
-        map.emplace(id, sat); 
+        handler.addConnection(port, ip, id);
     }
 }
 
@@ -85,25 +83,29 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Ground Control Up" << std::endl;
 
+    GCConnectionHandler handler;
+
     // attempt to connect to all satellites
-    connectToSatellites(argv[1]);
+    connectToSatellites(argv[1], handler);
 
     // once connected create a logger thread to handle all the data sent from the satellites
     // MessageQueue queue;
     // Logger logger("Ground_Control_logger.txt", &queue);
-
-    // create another thread to handle sending course adjustments to the satellites
+    
     // start a server
     Receiver receiver;
     receiver.startServer();
     // create a thread to listen for messages
-    std::thread listenerThread(&Receiver::listen, &receiver);
+    std::thread listenerThread(&Receiver::listen, &receiver, &handler);
+
+    // create another thread to handle sending course adjustments to the satellites
+    std::thread senderThread(&messageSatellite, handler);
 
     // handle signal
     signal(SIGINT, signalHandler);
 
     // loop continuously until user kills the program
-    while(true) messageSatellite();  // 0.01 seconds
+    while(true) sleep(10000);  // 0.01 seconds
 
     return 0;
 }
