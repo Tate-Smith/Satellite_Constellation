@@ -4,7 +4,7 @@
 #define SIMULATION_H  
   
 #include "Satellite.h"
-#include "../network/NetworkManager.h"
+#include <unistd.h>
 
 class Simulation {
     private:

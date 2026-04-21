@@ -3,6 +3,8 @@
 #ifndef SATELLITE_H
 #define SATELLITE_H
 #include <iostream>
+#include <fstream>
+#include <cmath>
 #include "../protocol/Message.h"
 #include "../network/ConnectionHandler.h"
 #include "../concurrency/MessageQueue.h"
@@ -40,7 +42,7 @@ class Satellite {
         // create a heartbeat message for this satellite
         Message createHeartbeatMessage() const;
 
-        Message createdataDump() const;
+        Message createDataDump() const;
 
         // get the connection handler ptr
         ConnectionHandler* getConnectionHandler();

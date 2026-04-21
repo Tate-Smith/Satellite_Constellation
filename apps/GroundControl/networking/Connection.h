@@ -3,10 +3,14 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "../../../src/protocol/Message.h"
-#include "../../../src/protocol/Serializer.h"
+#include <sys/socket.h>
+#include <iostream>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <string>
+#include "../../../src/protocol/Message.h"
+#include "../../../src/protocol/Serializer.h"
 
 enum GCConnectionState {
     CONNECTED,

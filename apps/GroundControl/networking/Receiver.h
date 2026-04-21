@@ -4,6 +4,11 @@
 #define RECIEVER_H
 
 #include <netinet/in.h>
+#include <cstring>
+#include <iostream>
+#include <arpa/inet.h>
+#include "../../../src/protocol/Message.h"
+#include "../../../src/protocol/Serializer.h"
 #include "GCConnectionHandler.h"
 
 class Receiver {

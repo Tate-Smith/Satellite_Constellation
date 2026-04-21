@@ -4,14 +4,16 @@
 #define CONNECTION_HANDLER_H
 
 #include "PeerConnection.h"
+#include <unordered_map>
+#include <iostream>
 #include "../logging/Logger.h"
 #include "../concurrency/MessageQueue.h"
-#include <unordered_map>
 
 class ConnectionHandler {
     private:
         std::unordered_map<int, PeerConnection> connections; // where to store all peer connections
         MessageQueue *queue;
+        mutable std::mutex mtx;
 
     public:
         ConnectionHandler(MessageQueue *queue); // constructor to instialize the queue

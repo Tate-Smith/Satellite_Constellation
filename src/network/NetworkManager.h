@@ -5,9 +5,13 @@
 
 #include <string>
 #include <netinet/in.h>
-#include "../protocol/Message.h"
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <iostream>
 #include "ConnectionHandler.h"
 #include "../concurrency/MessageQueue.h"
+#include "../protocol/Message.h"
+#include "../protocol/Serializer.h"
 
 class NetworkManager {
     int serverSocket;

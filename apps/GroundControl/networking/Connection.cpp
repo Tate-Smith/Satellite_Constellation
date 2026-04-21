@@ -1,20 +1,15 @@
 /*
 File: Connection
 Date Created: April 9th, 2026
-Last Updated: April 15th, 2026
+Last Updated: April 21st, 2026
 Author: Tate Smith
 Purpose: This file handles connecting to a satellite and sending messages to it
 */
 
 #include "Connection.h"
-#include <sys/socket.h>
-#include <iostream>
-#include <sys/_endian.h>
-#include <Kernel/sys/_endian.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
-Connection::Connection(int id, int port, std::string ip) : id(id), satSocket(-1), port(port), ip(ip) {}
+Connection::Connection(int id, int port, std::string ip) : id(id), satSocket(-1), port(port), ip(ip), state(DISCONNECTED), 
+lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0) {}
 
 void Connection::connect() {
     // function to connect to a satellite
@@ -104,4 +99,5 @@ bool Connection::isTimedOut() const {
 
 void Connection::markConnected() {
     this->state = GCConnectionState::CONNECTED;
+    this->retryCounter = 0;
 }

@@ -5,12 +5,18 @@
 
 #include <string>
 #include <ctime>
-#include "../protocol/Message.h"
-#include "../concurrency/MessageQueue.h"
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <iostream>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include "../concurrency/MessageQueue.h"
+#include "../protocol/Serializer.h"
+#include "../protocol/Message.h"
 
 enum ConnectionState {
     CONNECTED,
+    CONNECTING,
     DISCONNECTED
 };
 

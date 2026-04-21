@@ -1,18 +1,12 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 15th, 2026
+Last Updated: April 21st, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
 
 #include "PeerConnection.h"
-#include <sys/socket.h>
-#include <iostream>
-#include "../protocol/Serializer.h"
-#include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId) : 
 peerId(id), satId(satId), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
@@ -50,6 +44,7 @@ void PeerConnection::connect() {
     m.alive = true;
     PeerConnection::sendMessage(m);
     queue->pushBack("Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));
+    this->state = ConnectionState::CONNECTING;
 }
 
 void PeerConnection::disconnect() {
@@ -119,4 +114,5 @@ bool PeerConnection::isTimedOut() const {
 
 void PeerConnection::markConnected() {
     this->state = ConnectionState::CONNECTED;
+    this->retryCounter = 0;
 }

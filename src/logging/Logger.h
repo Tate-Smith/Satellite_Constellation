@@ -5,6 +5,8 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
+#include <unistd.h>
 #include "../concurrency/MessageQueue.h"
 
 class Logger {

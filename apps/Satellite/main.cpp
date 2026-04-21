@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: April 9th, 2026
+Last Updated: April 21st, 2026
 Author: Tate Smith
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
@@ -29,7 +29,7 @@ void broadcast(Satellite &satellite) {
         if (i % 2 == 0) {
             handler->printAllPeers();
             // every 10 seconds send an update to ground control
-            handler->sendMessageToPeer(0, satellite.createdataDump());
+            handler->sendMessageToPeer(0, satellite.createDataDump());
         }
         ++i;
     }
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     queue.pushBack("Logger started."); // push message to know that its working
 
     // create a logger object
-    Logger logger("Satelite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
+    Logger logger("Satellite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
 
     // create a satellite with the provided arguments
     Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
@@ -65,10 +65,14 @@ int main(int argc, char* argv[]) {
 
     // the main sepration of concerns, sim loop, listening for messages, sending messages, logger
 
+    // handle signal
+    signal(SIGINT, signalHandler);
+
     // create a simulation with a time step of 1 second
     Simulation sim(1, satellite);
     // run a simulation thread with the run() func
     std::thread simulationThread(&Simulation::run, &sim);
+    simulationThread.detach();
 
     // run a thread to listen for messages (network manager)
     NetworkManager networkManager(&queue, std::stoi(argv[1]));
@@ -76,15 +80,15 @@ int main(int argc, char* argv[]) {
     networkManager.startServer(std::stoi(argv[8]));
     // listen for connections
     std::thread listenerThread(&NetworkManager::acceptConnections, &networkManager, satellite.getConnectionHandler());
+    listenerThread.detach();
 
     // run a thread to send messages (connection handler through satellite)
     std::thread senderThread(&broadcast, std::ref(satellite));
+    senderThread.detach();
 
     // run a logger thread
     std::thread loggerThread(&Logger::log, &logger);
-
-    // handle signal
-    signal(SIGINT, signalHandler);
+    loggerThread.detach();
 
     // loop continuously until user kills the program
     while (true) usleep(10000);  // 0.01 seconds

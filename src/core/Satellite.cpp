@@ -1,14 +1,13 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 15th, 2026
+Last Updated: April 21st, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
 */
 
 #include "Satellite.h"
-#include <cmath>
 
 Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue) : handler(queue), queue(queue) {
     this->id = id;
@@ -70,16 +69,15 @@ Message Satellite::createHeartbeatMessage() const {
     return m;
 }
 
-Message Satellite::createdataDump() const {
+Message Satellite::createDataDump() const {
     // this is the function that the satellite uses to send all of its file data down to the GC
     // open the file
-    std::string filename = "Satelite_" + std::to_string(this->id) + "_logger.txt";
+    std::string filename = "Satellite_" + std::to_string(this->id) + "_logger.txt";
     std::ifstream file(filename , std::ios::binary);
 
     // makesure it opened succesfully
     if (!file) {
-        std::cerr << "File failed to open" << std::endl;
-        exit(1);
+        throw std::runtime_error("File failed to open");
     }
 
     // create message and return it
@@ -92,6 +90,7 @@ Message Satellite::createdataDump() const {
 
     // clear the file
     file.clear();
+    file.close();
 
     return m;
 }

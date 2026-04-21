@@ -1,21 +1,16 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 15th, 2026
+Last Updated: April 21st, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
 
 #include "NetworkManager.h"
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include "../protocol/Message.h"
-#include "../protocol/Serializer.h"
 
-int BUFFER = 2048;
+static const int BUFFER = 2048;
 
-NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
+NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue), serverSocket(-1) {}
 
 void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
@@ -66,7 +61,15 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
         // convert the bytes to a message
-        auto msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        std::unique_ptr<Message> msg;
+        try {
+            msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        }
+        catch (...) {
+            // skip the udp pacjet if it isnt decoded properly
+            continue;
+        }
+        
         Message& message = *msg;
         PeerConnection* peer = handler->getConnection(message.senderId);
 
@@ -74,7 +77,7 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         if (!peer) {
             // check if its ground control
             if (message.senderId != 0) handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
-            else handler->addOutgoingConnection(8000, ip, 0, satId);
+            else handler->addOutgoingConnection(ntohs(senderAddr.sin_port), ip, 0, satId);
         }
         else {
             peer->heartbeat();

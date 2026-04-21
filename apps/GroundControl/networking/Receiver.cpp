@@ -1,12 +1,7 @@
 #include "Receiver.h"
-#include <cstring>
-#include <iostream>
-#include "../../../src/protocol/Message.h"
-#include "../../../src/protocol/Serializer.h"
-#include <arpa/inet.h>
 
-int PORT = 8000; // always listening on port 8000
-int BUFFER = 2048;
+static const int PORT = 8000; // always listening on port 8000
+static const int BUFFER = 2048;
 
 void Receiver::startServer() {
     // function to start a server on the specified port
@@ -57,7 +52,15 @@ void Receiver::listen(GCConnectionHandler *handler) {
         inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
         // convert the bytes to a message
-        auto msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        std::unique_ptr<Message> msg;
+        try {
+            msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        }
+        catch (...) {
+            // skip the udp pacjet if it isnt decoded properly
+            continue;
+        }
+
         Message& message = *msg;
         Connection* satellite = handler->getConnection(message.senderId);
 
@@ -73,17 +76,27 @@ void Receiver::listen(GCConnectionHandler *handler) {
 
         std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
 
+        // keep track of whether a message was properly handled or not
+        bool handled = false;
         // decide what to do with the message
-        if (message.header.type == 2) {
+        if (message.header.type == MessageType::FILE_MSG) {
             // if it is a file dump
+            // TODO handle file dump
+            handled = true;
+        }
+        else if (message.header.type == MessageType::HEARTBEAT) {
+            // if it is a heartbeat
+            handled = true;
         }
 
-        // send an ack message to the given satellite let it know the message was recieved
-        Ack m;
-        m.header.size = sizeof(m);
-        m.header.type = MessageType::ACK;
-        m.senderId = 0;
-        m.received = true;
-        handler->sendMessageToSat(message.senderId, m);
+        // send an ack message to the given satellite let it know the message was recieved if the message was properly handled
+        if (handled) {
+            Ack m;
+            m.header.size = sizeof(m);
+            m.header.type = MessageType::ACK;
+            m.senderId = 0;
+            m.received = true;
+            handler->sendMessageToSat(message.senderId, m);
+        }
     }
 }
