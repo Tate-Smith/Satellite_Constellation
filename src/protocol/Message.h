@@ -10,6 +10,7 @@ It defines the structure of a message, including its type, sender ID, and conten
 #define MESSAGE_H
 
 #include <cstdint>
+#include "ProtocolUtils.h"
 
 enum MessageType : uint8_t {
     HEARTBEAT = 1,

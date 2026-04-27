@@ -1,3 +1,11 @@
+/*
+File: GCConnectionHandler
+Date Created: April 9th, 2026
+Last Updated: April 27th, 2026
+Author: Tate Smith
+Purpose: This file handles all conenctions with the ground control
+*/
+
 #include "GCConnectionHandler.h"
 
 void GCConnectionHandler::addConnection(int port, const std::string& ip, int satId) {
@@ -33,12 +41,18 @@ void GCConnectionHandler::removeConnection(int satId) {
     satellites.erase(satId);
 }
 
-Connection* GCConnectionHandler::getConnection(int satId) {
-    // get a connection at a specific id
+bool GCConnectionHandler::hasConnection(int satId) {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    return satellites.find(satId) != satellites.end();
+}
+
+void GCConnectionHandler::heartbeatSat(int satId) {
     std::lock_guard<std::mutex>lock(this->mtx);
     auto it = satellites.find(satId);
-    if (it == satellites.end()) return nullptr;
-    return &it->second;
+    if (it != satellites.end()) {
+        it->second.heartbeat();
+        it->second.markConnected();
+    }
 }
 
 void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) const {

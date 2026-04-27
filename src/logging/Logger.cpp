@@ -23,9 +23,10 @@ void Logger::log() {
         std::string msg = this->queue->pop();
         // get current time stamp
         time_t cur = time(nullptr);
-        tm* time = localtime(&cur);
+        tm timeInfo;
+        localtime_r(&cur, &timeInfo);
         char timeStamp[19];
-        strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", time);
+        strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", &timeInfo);
         // convert the timeStamp to a string
         std::string timeStr;
         for (int i = 0; i < 19; ++i) timeStr += timeStamp[i];

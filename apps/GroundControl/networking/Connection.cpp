@@ -45,7 +45,7 @@ void Connection::connect() {
 
 void Connection::sendMessage(const Message &message) const {
     // function to send messages to the satellite
-    std::vector<std::uint8_t> msg = serializeMessage(message);
+    std::vector<std::uint8_t> msg = message.serialize();
     int sent = sendto(this->satSocket, reinterpret_cast<const char*>(msg.data()), 
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     // check if there was an error sending the message

@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 27th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -58,7 +58,7 @@ void Satellite::print() const {
     queue->pushBack(str);
 }
 
-Message Satellite::createHeartbeatMessage() const {
+Heartbeat Satellite::createHeartbeatMessage() const {
     Heartbeat m;
     m.header.type = MessageType::HEARTBEAT;
     m.header.size = sizeof(m);
@@ -69,30 +69,30 @@ Message Satellite::createHeartbeatMessage() const {
     return m;
 }
 
-Message Satellite::createDataDump() const {
+void Satellite::createDataDump() {
     // this is the function that the satellite uses to send all of its file data down to the GC
     // open the file
     std::string filename = "Satellite_" + std::to_string(this->id) + "_logger.txt";
     std::ifstream file(filename , std::ios::binary);
 
-    // makesure it opened succesfully
-    if (!file) {
-        throw std::runtime_error("File failed to open");
+    // make sure it opened succesfully
+    if (!file) throw std::runtime_error("File failed to open");
+
+    while (true) {
+        // create message and return it
+        File_Msg m;
+        m.header.type = MessageType::FILE_MSG;
+        m.senderId = this->id;
+        file.read(m.data, sizeof(m.data));
+        m.len = file.gcount();
+        m.last = file.eof();
+        m.header.size = sizeof(m);
+        this->handler.sendMessageToPeer(0, m);
+        if (m.last) break;
     }
-
-    // create message and return it
-    File_Msg m;
-    m.header.type = MessageType::FILE_MSG;
-    m.senderId = this->id;
-    file.read(m.data, sizeof(m.data));
-    m.len = file.gcount();
-    m.header.size = sizeof(m);
-
     // clear the file
     file.clear();
     file.close();
-
-    return m;
 }
 
 ConnectionHandler* Satellite::getConnectionHandler() {

@@ -1,7 +1,33 @@
+/*
+File: Reciever
+Date Created: April 9th, 2026
+Last Updated: April 27th, 2026
+Author: Tate Smith
+Purpose: This file is the listener for the ground control station, it starts a server to listen from,
+then will listen for incoming messages and handles them
+*/
+
 #include "Receiver.h"
 
 static const int PORT = 8000; // always listening on port 8000
 static const int BUFFER = 2048;
+
+Receiver::Receiver() : serverSocket(-1) {}
+
+void Receiver::handleFileDump(const File_Msg& msg) {
+    // This methods job is to handle the file dump incoming from a satellite
+    auto& chunk = this->buffer[msg.senderId];
+    chunk.insert(chunk.end(), msg.data, msg.data + msg.len);
+
+    // if it is the last chunk of data
+    if (msg.last) {
+        // print out everything in the file
+        std::cout << "File dump from satellite: " << msg.senderId << std::endl;
+        std::cout.write(chunk.data(), chunk.size());
+        std::cout << "<--- End of Dump --->" << std::endl;
+        chunk.clear();
+    }
+}
 
 void Receiver::startServer() {
     // function to start a server on the specified port
@@ -57,21 +83,19 @@ void Receiver::listen(GCConnectionHandler *handler) {
             msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
         }
         catch (...) {
-            // skip the udp pacjet if it isnt decoded properly
+            // skip the udp packet if it isnt decoded properly
             continue;
         }
 
         Message& message = *msg;
-        Connection* satellite = handler->getConnection(message.senderId);
 
        // add if not already known
-        if (!satellite) {
+        if (!handler->hasConnection(message.senderId)) {
             handler->addConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
         }
         else {
             // if know update connected status and heartbeat
-            satellite->heartbeat();
-            satellite->markConnected();
+            handler->heartbeatSat(message.senderId);
         }
 
         std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
@@ -81,7 +105,7 @@ void Receiver::listen(GCConnectionHandler *handler) {
         // decide what to do with the message
         if (message.header.type == MessageType::FILE_MSG) {
             // if it is a file dump
-            // TODO handle file dump
+            handleFileDump(static_cast<const File_Msg&>(*msg));
             handled = true;
         }
         else if (message.header.type == MessageType::HEARTBEAT) {

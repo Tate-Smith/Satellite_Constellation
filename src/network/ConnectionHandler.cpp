@@ -1,7 +1,7 @@
 /*
 File: ConnectionHandler
 Date Created: March 30th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 27th, 2026
 Author: Tate Smith
 Purpose: This file represents the handler for managing all peer connections in the network, it can add and remove connections, 
 send messages to specific peers, and broadcast messages to all peers
@@ -56,12 +56,18 @@ void ConnectionHandler::removeConnection(int peerId) {
     connections.erase(peerId);
 }
 
-PeerConnection* ConnectionHandler::getConnection(int peerId) {
-    // get a connection at a specific id
+bool ConnectionHandler::hasConnection(int satId) {
     std::lock_guard<std::mutex> lock(this->mtx);
-    auto it = connections.find(peerId);
-    if (it == connections.end()) return nullptr;
-    return &it->second;
+    return connections.find(satId) != connections.end();
+}
+
+void ConnectionHandler::heartbeatSat(int satId) {
+    std::lock_guard<std::mutex>lock(this->mtx);
+    auto it = connections.find(satId);
+    if (it != connections.end()) {
+        it->second.heartbeat();
+        it->second.markConnected();
+    }
 }
 
 void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
@@ -73,7 +79,10 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
         queue->pushBack("Satellite Id: " + std::to_string(peerId) + " Not found");
         return;
     }
-    peer->second.sendMessage(message);
+    // make sure the peer is connected as well
+    if (peer->second.getState() == ConnectionState::CONNECTED) {
+        peer->second.sendMessage(message);
+    }
 }
 
 void ConnectionHandler::broadcastMessage(const Message& message) {

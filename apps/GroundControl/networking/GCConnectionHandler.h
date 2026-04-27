@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <iostream>
+#include <mutex>
 #include "Connection.h"
 
 class GCConnectionHandler {
@@ -16,7 +17,8 @@ class GCConnectionHandler {
         void addConnection(int port, const std::string& ip, int satId); // connecting to a satellite
         void update();  // drives reconnection logic
         void removeConnection(int satId);
-        Connection* getConnection(int satId); // non-owning, may return nullptr
+        bool hasConnection(int satId);
+        void heartbeatSat(int satId); // sends a heartbeat and sets connection to connected
         void sendMessageToSat(int satId, const Message& message) const;
         void broadcastMessage(const Message& message); // send a message to all peers
         void printAllSats(); // prints all the satellites connected to this satellite

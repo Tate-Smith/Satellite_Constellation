@@ -10,7 +10,7 @@ It can start a server, and accept connections from other peers, and it uses the 
 
 static const int BUFFER = 2048;
 
-NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue), serverSocket(-1) {}
+NetworkManager::NetworkManager(MessageQueue *queue, int satId) : serverSocket(-1), satId(satId), queue(queue) {}
 
 void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
@@ -71,17 +71,15 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         }
         
         Message& message = *msg;
-        PeerConnection* peer = handler->getConnection(message.senderId);
 
         // add if not already known
-        if (!peer) {
+        if (handler->hasConnection(message.senderId)) {
             // check if its ground control
             if (message.senderId != 0) handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
             else handler->addOutgoingConnection(ntohs(senderAddr.sin_port), ip, 0, satId);
         }
         else {
-            peer->heartbeat();
-            peer->markConnected();
+            handler->heartbeatSat(message.senderId);
         }
 
         if (message.senderId != 0) queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));

@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: April 9th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 27th, 2026
 Author: Tate Smith
 Purpose: This file runs the ground control side of the simulation, the ground controls job is to recieve telemtry updates from all the
 satellites and every once in a while send course adjustments
@@ -31,6 +31,14 @@ void messageSatellite(const GCConnectionHandler &handler) {
         int id;
         std::cout << "Satellite Id? ";
         std::cin >> id;
+        // make sure it was valid input
+        if (std::cin.fail()) {
+            std::cin.clear();
+            std::cin.ignore();
+            std::cout << "Invalid input, should be an integer representing a Satellite Id" << std::endl;
+            continue;
+        }
+
         // send a basic heartbeat message
         Heartbeat m;
         m.senderId = 0;
@@ -102,7 +110,7 @@ int main(int argc, char *argv[]) {
     std::thread listenerThread(&Receiver::listen, &receiver, &handler);
     listenerThread.detach();
 
-    // create another thread to handle sending course adjustments to the satellites
+    // create another thread to handle sending messages to the satellites
     std::thread senderThread(&messageSatellite, std::ref(handler));
     senderThread.detach();
 

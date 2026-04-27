@@ -29,7 +29,7 @@ void broadcast(Satellite &satellite) {
         if (i % 2 == 0) {
             handler->printAllPeers();
             // every 10 seconds send an update to ground control
-            handler->sendMessageToPeer(0, satellite.createDataDump());
+            satellite.createDataDump();
         }
         ++i;
     }

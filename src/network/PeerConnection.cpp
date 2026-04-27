@@ -61,7 +61,7 @@ void PeerConnection::disconnect() {
 void PeerConnection::sendMessage(const Message& message) {
     // function to send a message to another peer, sends the specified message to a neighbor, if it was negative then there was an error
     // serialize the message into a byte
-    std::vector<std::uint8_t> msg = serializeMessage(message);
+    std::vector<std::uint8_t> msg = message.serialize();
     int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), 
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     if (sent < 0) {

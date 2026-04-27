@@ -6,7 +6,6 @@
 #include "PeerConnection.h"
 #include <unordered_map>
 #include <iostream>
-#include "../logging/Logger.h"
 #include "../concurrency/MessageQueue.h"
 
 class ConnectionHandler {
@@ -21,7 +20,8 @@ class ConnectionHandler {
         void addOutgoingConnection(int port, const std::string& ip, int peerId, int satId); // connecting to another satellite
         void update();  // drives reconnection logic
         void removeConnection(int peerId);
-        PeerConnection* getConnection(int peerId); // non-owning, may return nullptr
+        bool hasConnection(int satId);
+        void heartbeatSat(int satId); // sends a heartbeat and sets connection to connected
         void sendMessageToPeer(int peerId, const Message& message);
         void broadcastMessage(const Message& message); // send a message to all peers
         void printAllPeers(); // prints all the satellites connected to this satellite
