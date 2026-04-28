@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 28th, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
@@ -66,21 +66,15 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
             msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
         }
         catch (...) {
-            // skip the udp pacjet if it isnt decoded properly
+            // skip the udp packet if it isnt decoded properly
             continue;
         }
         
         Message& message = *msg;
 
         // add if not already known
-        if (handler->hasConnection(message.senderId)) {
-            // check if its ground control
-            if (message.senderId != 0) handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
-            else handler->addOutgoingConnection(ntohs(senderAddr.sin_port), ip, 0, satId);
-        }
-        else {
-            handler->heartbeatSat(message.senderId);
-        }
+        if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, satId);
+        else handler->heartbeatSat(message.senderId);
 
         if (message.senderId != 0) queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
         else queue->pushBack("Message received from Ground Control");

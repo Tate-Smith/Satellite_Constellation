@@ -12,9 +12,10 @@ class GCConnectionHandler {
     private:
         std::unordered_map<int, Connection> satellites; // where to store all peer connections
         mutable std::mutex mtx;
+        int gcPort; // the ground controls listing port
 
     public:
-        void addConnection(int port, const std::string& ip, int satId); // connecting to a satellite
+        void addConnection(int port, const std::string& ip, int satId, int gcPort); // connecting to a satellite
         void update();  // drives reconnection logic
         void removeConnection(int satId);
         bool hasConnection(int satId);

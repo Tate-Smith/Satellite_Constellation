@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <vector>
 #include "../protocol/Message.h"
 #include "../network/ConnectionHandler.h"
 #include "../concurrency/MessageQueue.h"
@@ -16,10 +17,11 @@ class Satellite {
         double x, y, z;
         double vx, vy, vz;
         MessageQueue *queue;
+        int port; // the port that this satellite is listening on
 
     public:
         // constructor
-        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue);
+        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue *queue);
 
         // getters
         uint32_t getId() const;
@@ -42,7 +44,7 @@ class Satellite {
         // create a heartbeat message for this satellite
         Heartbeat createHeartbeatMessage() const;
 
-        void createDataDump();
+        std::vector<File_Msg> createDataDump();
 
         // get the connection handler ptr
         ConnectionHandler* getConnectionHandler();

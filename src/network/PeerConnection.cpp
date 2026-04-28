@@ -8,9 +8,9 @@ Purpose: This file represents a connection to a peer in the network, and it can 
 
 #include "PeerConnection.h"
 
-PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId) : 
+PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId, int listeningPort) : 
 peerId(id), satId(satId), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
-lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), isOutgoing(false), queue(queue) {}
+lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), queue(queue) {}
 
 void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
@@ -39,6 +39,7 @@ void PeerConnection::connect() {
     m.header.type = MessageType::HEARTBEAT;
     m.header.size = sizeof(m);
     m.senderId = satId;
+    m.senderPort = this->listeningPort;
     // get current time stamp
     m.timestamp = time(nullptr);
     m.alive = true;
@@ -98,18 +99,8 @@ ConnectionState PeerConnection::getState() {
     return this->state;
 }
 
-bool PeerConnection::getOutgoing() {
-    // returns whether this is an outgoing connection
-    return this->isOutgoing;
-}
-
-void PeerConnection::setOutgoing(bool b) {
-    // sets outgoing
-    this->isOutgoing = b;
-}
-
 bool PeerConnection::isTimedOut() const {
-    return (time(nullptr) - lastHeartbeat) > 8;
+    return (time(nullptr) - lastHeartbeat) > 11;
 }
 
 void PeerConnection::markConnected() {

@@ -90,11 +90,9 @@ void Receiver::listen(GCConnectionHandler *handler) {
         Message& message = *msg;
 
        // add if not already known
-        if (!handler->hasConnection(message.senderId)) {
-            handler->addConnection(ntohs(senderAddr.sin_port), ip, message.senderId);
-        }
+        if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, PORT);
         else {
-            // if know update connected status and heartbeat
+            // if known update connected status and heartbeat
             handler->heartbeatSat(message.senderId);
         }
 
@@ -119,6 +117,7 @@ void Receiver::listen(GCConnectionHandler *handler) {
             m.header.size = sizeof(m);
             m.header.type = MessageType::ACK;
             m.senderId = 0;
+            m.senderPort = PORT;
             m.received = true;
             handler->sendMessageToSat(message.senderId, m);
         }

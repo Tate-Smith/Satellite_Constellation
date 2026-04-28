@@ -23,12 +23,17 @@ std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
     std::memcpy(&senderId, buf + offset, sizeof(senderId));
     offset += sizeof(senderId);
 
+    int32_t senderPort;
+    std::memcpy(&senderPort, buf + offset, sizeof(senderPort));
+    offset += sizeof(senderPort);
+
     // figure out which type of message it is
     switch (head.type) {
         case HEARTBEAT: {
             auto msg_heartbeat = std::make_unique<Heartbeat>();
             msg_heartbeat->header = head;
             msg_heartbeat->senderId = senderId;
+            msg_heartbeat->senderPort = senderPort;
             std::memcpy(&msg_heartbeat->timestamp, buf + offset, sizeof(msg_heartbeat->timestamp));
             offset += sizeof(msg_heartbeat->timestamp);
             std::memcpy(&msg_heartbeat->alive, buf + offset, sizeof(msg_heartbeat->alive));
@@ -38,6 +43,7 @@ std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
             auto msg_file = std::make_unique<File_Msg>();
             msg_file->header = head;
             msg_file->senderId = senderId;
+            msg_file->senderPort = senderPort;
             std::memcpy(&msg_file->data, buf + offset, sizeof(msg_file->data));
             offset += sizeof(msg_file->data);
             std::memcpy(&msg_file->len, buf + offset, sizeof(msg_file->len));
@@ -49,6 +55,7 @@ std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
             auto msg_ack = std::make_unique<Ack>();
             msg_ack->header = head;
             msg_ack->senderId = senderId;
+            msg_ack->senderPort = senderPort;
             std::memcpy(&msg_ack->received, buf + offset, sizeof(msg_ack->received));
             return msg_ack;
         }

@@ -29,7 +29,10 @@ void broadcast(Satellite &satellite) {
         if (i % 2 == 0) {
             handler->printAllPeers();
             // every 10 seconds send an update to ground control
-            satellite.createDataDump();
+            if (handler->hasConnection(0)) {
+                std::vector<File_Msg> msgs = satellite.createDataDump();
+                for (File_Msg m : msgs) handler->sendMessageToPeer(0, m);
+            }
         }
         ++i;
     }
@@ -48,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     // create a satellite with the provided arguments
     Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
-    std::stod(argv[7]), &queue);
+    std::stod(argv[7]), std::stod(argv[7]), &queue);
 
     // parse remaining args and connect to them
     for (int i = 10; i < argc; ++i) {

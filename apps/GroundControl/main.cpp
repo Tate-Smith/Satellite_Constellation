@@ -78,7 +78,7 @@ void connectToSatellites(const std::string& file, GCConnectionHandler& handler) 
         int port = std::stoi(split[2]);
 
         // then connect to satellite
-        handler.addConnection(port, ip, id);
+        handler.addConnection(port, ip, id, 8000);
     }
 }
 

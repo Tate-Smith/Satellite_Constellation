@@ -28,9 +28,10 @@ class Connection {
         time_t lastHeartbeat; // last time it sent a heartbeat message
         time_t lastReconnect; // last time it tried connecting
         int retryCounter; // amount of connects its tried
+        int gcPort; // gorund controls port its listening on
 
     public:
-        Connection(int id, int port, std::string ip); // constructor with the satellites listening port
+        Connection(int id, int port, std::string ip, int gcPort); // constructor with the satellites listening port
         void connect(); // function to connect to the satellite
         void sendMessage(const Message &messsage) const; // function to send messages to the satellite
         GCConnectionState getState(); // get what the current state of the peer is

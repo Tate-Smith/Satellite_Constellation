@@ -8,8 +8,8 @@ Purpose: This file handles connecting to a satellite and sending messages to it
 
 #include "Connection.h"
 
-Connection::Connection(int id, int port, std::string ip) : id(id), satSocket(-1), port(port), ip(ip), state(DISCONNECTED), 
-lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0) {}
+Connection::Connection(int id, int port, std::string ip, int gcPort) : id(id), satSocket(-1), port(port), ip(ip), state(DISCONNECTED), lastHeartbeat(time(nullptr)),
+ lastReconnect(time(nullptr)), retryCounter(0), gcPort(gcPort) {}
 
 void Connection::connect() {
     // function to connect to a satellite
@@ -34,6 +34,7 @@ void Connection::connect() {
     // whenever it attempts to connect it needs to send a message to the satellite first to establish a connection
     Heartbeat m;
     m.senderId = 0;
+    m.senderPort = gcPort;
     m.header.type = MessageType::HEARTBEAT;
     // get current time stamp
     m.timestamp = time(nullptr);
@@ -50,7 +51,7 @@ void Connection::sendMessage(const Message &message) const {
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     // check if there was an error sending the message
     if (sent < 0) {
-        std::cout << "Error sending message" << std::endl;
+        std::cout << "Error sending message to Satellite" << std::endl;
     } else {
         std::cout <<  "Sent message to Satellite" << std::endl;
     }

@@ -28,6 +28,7 @@ struct Header {
 struct Message {
     Header header;
     int32_t senderId;
+    int32_t senderPort;
 
     virtual ~Message() = default;
     virtual std::vector<uint8_t> serialize() const = 0;
@@ -41,6 +42,7 @@ struct Heartbeat : Message {
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
+        appendBytes(buffer, &senderPort, sizeof(senderPort));
         appendBytes(buffer, &timestamp, sizeof(timestamp));
         appendBytes(buffer, &alive, sizeof(alive));
         return buffer;
@@ -56,6 +58,7 @@ struct File_Msg : Message {
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
+        appendBytes(buffer, &senderPort, sizeof(senderPort));
         appendBytes(buffer, &data, sizeof(data));
         appendBytes(buffer, &len, sizeof(len));
         appendBytes(buffer, &last, sizeof(last));
@@ -70,6 +73,7 @@ struct Ack : Message {
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
+        appendBytes(buffer, &senderPort, sizeof(senderPort));
         appendBytes(buffer, &received, sizeof(received));
         return buffer;
     }

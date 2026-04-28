@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 27th, 2026
+Last Updated: April 28th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -9,7 +9,8 @@ information from other satellites and ground control
 
 #include "Satellite.h"
 
-Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, MessageQueue *queue) : handler(queue), queue(queue) {
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue *queue) : 
+handler(queue, port), queue(queue) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -41,7 +42,7 @@ void Satellite::connectToPeer(const std::string& ip, int port, uint32_t peerId) 
     This function takes in a const unmodifiable string address, a port number, and a peerid, it
     then uses the connectionHandler object to add a new outgoing peer to the peers list
     */
-    handler.addOutgoingConnection(port, ip, peerId, this->id);
+    handler.addConnection(port, ip, peerId, this->id);
 }
 
 void Satellite::update(double dt) {
@@ -63,13 +64,14 @@ Heartbeat Satellite::createHeartbeatMessage() const {
     m.header.type = MessageType::HEARTBEAT;
     m.header.size = sizeof(m);
     m.senderId = id;
+    m.senderPort = port;
     // get current time stamp
     m.timestamp = time(nullptr);
     m.alive = true;
     return m;
 }
 
-void Satellite::createDataDump() {
+std::vector<File_Msg> Satellite::createDataDump() {
     // this is the function that the satellite uses to send all of its file data down to the GC
     // open the file
     std::string filename = "Satellite_" + std::to_string(this->id) + "_logger.txt";
@@ -77,6 +79,9 @@ void Satellite::createDataDump() {
 
     // make sure it opened succesfully
     if (!file) throw std::runtime_error("File failed to open");
+
+    // create the vector to return
+    std::vector<File_Msg> msgs;
 
     while (true) {
         // create message and return it
@@ -87,12 +92,13 @@ void Satellite::createDataDump() {
         m.len = file.gcount();
         m.last = file.eof();
         m.header.size = sizeof(m);
-        this->handler.sendMessageToPeer(0, m);
+        msgs.push_back(m);
         if (m.last) break;
     }
     // clear the file
     file.clear();
     file.close();
+    return msgs;
 }
 
 ConnectionHandler* Satellite::getConnectionHandler() {

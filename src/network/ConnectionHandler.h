@@ -13,11 +13,11 @@ class ConnectionHandler {
         std::unordered_map<int, PeerConnection> connections; // where to store all peer connections
         MessageQueue *queue;
         mutable std::mutex mtx;
+        int listeningPort; // the port that this satellite is listening on
 
     public:
-        ConnectionHandler(MessageQueue *queue); // constructor to instialize the queue
-        void addIncomingConnection(int port, const std::string& ip, int peerId, int satId); // another satellite trying to connect
-        void addOutgoingConnection(int port, const std::string& ip, int peerId, int satId); // connecting to another satellite
+        ConnectionHandler(MessageQueue *queue, int listeningPort); // constructor to instialize the queue
+        void addConnection(int port, const std::string& ip, int peerId, int satId); // a satellite or Ground Control trying to connect
         void update();  // drives reconnection logic
         void removeConnection(int peerId);
         bool hasConnection(int satId);

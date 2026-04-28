@@ -1,7 +1,7 @@
 /*
 File: ConnectionHandler
 Date Created: March 30th, 2026
-Last Updated: April 27th, 2026
+Last Updated: April 28th, 2026
 Author: Tate Smith
 Purpose: This file represents the handler for managing all peer connections in the network, it can add and remove connections, 
 send messages to specific peers, and broadcast messages to all peers
@@ -9,25 +9,16 @@ send messages to specific peers, and broadcast messages to all peers
 
 #include "ConnectionHandler.h"
 
-ConnectionHandler::ConnectionHandler(MessageQueue *queue) : queue(queue) {}
+ConnectionHandler::ConnectionHandler(MessageQueue *queue, int listeningPort) : queue(queue), listeningPort(listeningPort) {}
 
-void ConnectionHandler::addIncomingConnection(int port, const std::string& ip, int peerId, int satId) {
+void ConnectionHandler::addConnection(int port, const std::string& ip, int peerId, int satId) {
     // create a new connection and add it to the map
     std::lock_guard<std::mutex> lock(this->mtx);
-    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue, satId));
+    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue, satId, this->listeningPort));
     if (inserted) {
         it->second.heartbeat();
-        it->second.markConnected();
-    }
-}
-
-void ConnectionHandler::addOutgoingConnection(int port, const std::string& ip, int peerId, int satId) {
-    // create a new connection and add it to the map, and connect to it if it works
-    std::lock_guard<std::mutex> lock(this->mtx);
-    auto [it, inserted] = connections.emplace(peerId, PeerConnection(peerId, ip, port, queue, satId));
-    if (inserted) {
-        it->second.setOutgoing(true);
         it->second.connect();
+        it->second.markConnected();
     }
 }
 
@@ -43,8 +34,7 @@ void ConnectionHandler::update() {
         }
 
         // try to reconnect if disconnected
-        else if ((i.second.getState() == ConnectionState::DISCONNECTED || i.second.getState() == ConnectionState::CONNECTING) 
-        && i.second.getOutgoing() && i.first != 0) {
+        else if ((i.second.getState() == ConnectionState::DISCONNECTED || i.second.getState() == ConnectionState::CONNECTING)) {
             i.second.reconnect();
         }
     }
