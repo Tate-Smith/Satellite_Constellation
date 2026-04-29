@@ -1,7 +1,15 @@
-
+/*
+File: Terminal
+Date Created: April 9th, 2026
+Last Updated: April 29th, 2026
+Author: Tate Smith
+Purpose: This file is the display for the ground control, everytime a satellite sends a data dump it is updated so it
+can see the most recent telemtery stats for the Satellite
+*/
 
 
 #include "Terminal.h"
+#include <regex>
 
 void Terminal::addSat(std::unique_ptr<SatelliteData> sat) {
     sats.emplace(sat->getSatId(), std::move(sat));
@@ -9,37 +17,53 @@ void Terminal::addSat(std::unique_ptr<SatelliteData> sat) {
 
 void Terminal::updateSat(int id, std::vector<char> file) {
     // this method decodes the log file for the data
-    auto sat = sats.find(id);
+    auto satInfo = sats.find(id);
+    SatelliteData &sat = *satInfo->second;
     std::string line;
     std::string data; // this string stores the last line of data given from the satellite
 
     for (char c : file) {
         if (c == '\n') {
             size_t start = line.find("] : ");
-            std::string substring = line.substr(start);
+            std::string substring = line.substr(start + 4);
 
             // check what type of message is it
             if (substring.starts_with("Satellite ")) {
                 data = substring;
             }
             else if (substring.starts_with("Message received from ")) {
-                sat->second->updateRecieved();
+                sat.updateRecieved();
             }
             else if (substring.starts_with("Sent message to ")) {
-                sat->second->updateSent();
+                sat.updateSent();
             }
-
+            line.clear();
         }
         else line.push_back(c);
     }
     // once the iteration through the file is finished update the satellites info
-    // TODO
+    if (!data.empty()) {
+        // split the line up into its parts and update the SatelliteData info
+        std::regex pattern(R"(Satellite (\d+): Position \((.*?), (.*?), (.*?)\) Velocity \((.*?), (.*?), (.*?)\))");
+        std::smatch vals;
+        if (std::regex_search(data, vals, pattern)) {
+            sat.updatePos(std::stof(vals[2]), std::stof(vals[3]), std::stof(vals[4]));
+            sat.updateVel(std::stof(vals[5]), std::stof(vals[6]), std::stof(vals[7]));
+        }
+    }
 }
 
 void Terminal::printAllSats() {
     std::cout << std::endl;
-    std::cout << " <--------------------------------- Satellite Network --------------------------------->" << std::endl;
-    for (const auto &sat : sats) std::cout << sat->toString();
-    std::cout << " <--------------------------------- Satellite Network --------------------------------->" << std::endl;
+    std::cout << "<------------------------------------------------------------------------ Satellite Network " 
+    << "------------------------------------------------------------------------>" << std::endl;
+    for (const auto &sat : sats) std::cout << sat.second->toString();
+    std::cout << "<------------------------------------------------------------------------ Satellite Network " 
+    << "------------------------------------------------------------------------>" << std::endl;
     std::cout << std::endl;
+}
+
+void Terminal::markSatDead(int id, bool b) {
+    auto sat = sats.find(id);
+    sat->second->markAlive(!b);
 }

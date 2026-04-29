@@ -13,11 +13,12 @@ satellites and every once in a while send course adjustments
 #include <sstream>
 #include <unordered_map>
 #include <thread>
-// #include "../../src/logging/Logger.h"
-// #include "../../src/concurrency/MessageQueue.h"
+#include "../../src/logging/Logger.h"
+#include "../../src/concurrency/MessageQueue.h"
 #include "networking/Connection.h"
 #include "networking/Receiver.h"
 #include "networking/GCConnectionHandler.h"
+#include "output/Terminal.h"
 
 void signalHandler(int sig) {
     // a function to handle the SIGINT signal
@@ -49,7 +50,7 @@ void messageSatellite(const GCConnectionHandler &handler) {
     }
 }
 
-void connectToSatellites(const std::string& file, GCConnectionHandler& handler) {
+void connectToSatellites(const std::string& file, GCConnectionHandler &handler, Terminal &terminal) {
     // this function goes through the file line by line and trys to connect to each satelite 
     /*
     File format:
@@ -78,6 +79,7 @@ void connectToSatellites(const std::string& file, GCConnectionHandler& handler) 
 
         // then connect to satellite
         handler.addConnection(port, ip, id, 8000);
+        terminal.addSat(std::make_unique<SatelliteData>(id));
     }
 }
 
@@ -90,20 +92,23 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Ground Control Up" << std::endl;
 
-    GCConnectionHandler handler;
+    MessageQueue queue;
+
+    Terminal terminal;
+    GCConnectionHandler handler(terminal, &queue);
 
     // attempt to connect to all satellites
-    connectToSatellites(argv[1], std::ref(handler));
+    connectToSatellites(argv[1], std::ref(handler), terminal);
 
     // handle signal
     signal(SIGINT, signalHandler);
 
     // once connected create a logger thread to handle all the data sent from the satellites
-    // MessageQueue queue;
-    // Logger logger("Ground_Control_logger.txt", &queue);
+    Logger logger("Ground_Control_logger.txt", &queue);
+    queue.pushBack("Logger started.");
     
     // start a server
-    Receiver receiver;
+    Receiver receiver(terminal, &queue);
     receiver.startServer();
     // create a thread to listen for messages
     std::thread listenerThread(&Receiver::listen, &receiver, &handler);
@@ -112,6 +117,14 @@ int main(int argc, char *argv[]) {
     // create another thread to handle sending messages to the satellites
     std::thread senderThread(&messageSatellite, std::ref(handler));
     senderThread.detach();
+
+    // create an update thread
+    std::thread updateThread(&GCConnectionHandler::update, std::ref(handler));
+    updateThread.detach();
+
+    // run a logger thread
+    std::thread loggerThread(&Logger::log, &logger);
+    loggerThread.detach();
 
     // loop continuously until user kills the program
     while(true) usleep(10000);  // 0.01 seconds

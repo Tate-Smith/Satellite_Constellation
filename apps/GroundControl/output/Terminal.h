@@ -16,6 +16,7 @@ class Terminal {
         void addSat(std::unique_ptr<SatelliteData> sat); // adds a satellite to the vector
         void updateSat(int id, std::vector<char> file); // this method updates the satellites current info
         void printAllSats();
+        void markSatDead(int id, bool b); // if a satllite dies it should say dead on the screen
 };
 
 #endif

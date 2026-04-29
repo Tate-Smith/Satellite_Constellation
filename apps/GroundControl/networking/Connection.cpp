@@ -1,21 +1,21 @@
 /*
 File: Connection
 Date Created: April 9th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file handles connecting to a satellite and sending messages to it
 */
 
 #include "Connection.h"
 
-Connection::Connection(int id, int port, std::string ip, int gcPort) : id(id), satSocket(-1), port(port), ip(ip), state(DISCONNECTED), lastHeartbeat(time(nullptr)),
- lastReconnect(time(nullptr)), retryCounter(0), gcPort(gcPort) {}
+Connection::Connection(int id, int port, std::string ip, int gcPort, MessageQueue *queue) : id(id), satSocket(-1), port(port), ip(ip), 
+state(DISCONNECTED), lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), gcPort(gcPort), queue(queue) {}
 
 void Connection::connect() {
     // function to connect to a satellite
     this->satSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (satSocket < 0) {
-        std::cout << "Error creating socket for peer" << std::endl;
+        queue->pushBack("Error creating socket for peer");
         return;
     }
 
@@ -27,7 +27,7 @@ void Connection::connect() {
 
     // converts the ip into binary, and if its negative then there was an error
     if (inet_pton(AF_INET, ip.c_str(), &peerAddr.sin_addr) <= 0) {
-        std::cout << "Invalid address / Address not supported for peer" << std::endl;
+        queue->pushBack("Invalid address / Address not supported for peer");
         return;
     }
 
@@ -41,7 +41,7 @@ void Connection::connect() {
     m.alive = true;
     m.header.size = sizeof(m);
     Connection::sendMessage(m);
-    std::cout << "Connecting to Satellite " << this->id << ", at address: " << ip << ":" << std::to_string(port) << std::endl;
+    queue->pushBack("Connecting to Satellite " + std::to_string(this->id) + ", at address: " + ip + ":" + std::to_string(port));
 }
 
 void Connection::sendMessage(const Message &message) const {
@@ -51,9 +51,9 @@ void Connection::sendMessage(const Message &message) const {
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     // check if there was an error sending the message
     if (sent < 0) {
-        std::cout << "Error sending message to Satellite" << std::endl;
+        queue->pushBack("Error sending message to Satellite");
     } else {
-        std::cout <<  "Sent message to Satellite" << std::endl;
+        queue->pushBack("Sent message to Satellite");
     }
 }
 
@@ -78,27 +78,36 @@ void Connection::heartbeat() {
     this->lastHeartbeat = time(nullptr);
 }
 
-void Connection::reconnect() {
+bool Connection::reconnect() {
     // try to reestablish a connection with the satellite
     // get current time
     time_t curTime = time(nullptr);
     // check if the last reconnect attempt was over 10 seconds ago
-    if (curTime - this->lastReconnect < 10) return;
+    if (curTime - this->lastReconnect < 10) return true;
     this->retryCounter++;
     // if over 10 reconnect attempts skip ie satellite is dead
-    if (this->retryCounter > 10) return;
+    if (this->retryCounter > 10) return false;
     this->lastReconnect = curTime;
-    std::cout << "Reconnecting to Satellite Id: " << this->id << "; Reconnect counter = " << this->retryCounter << std::endl;
+    queue->pushBack("Reconnecting to Satellite Id: " + std::to_string(this->id) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
     Connection::disconnect();
     Connection::connect();
+    return true;
 }
 
 bool Connection::isTimedOut() const {
-    return (time(nullptr) - lastHeartbeat) > 8;
+    return (time(nullptr) - lastHeartbeat) > 11;
 }
 
 void Connection::markConnected() {
     this->state = GCConnectionState::CONNECTED;
     this->retryCounter = 0;
+}
+
+int Connection::getId() {
+    return this->id;
+}
+
+bool Connection::isDead() {
+    return this->retryCounter > 10;
 }

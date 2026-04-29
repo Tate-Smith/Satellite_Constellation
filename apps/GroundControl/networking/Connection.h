@@ -11,6 +11,7 @@
 #include <string>
 #include "../../../src/protocol/Message.h"
 #include "../../../src/protocol/Serializer.h"
+#include "../../../src/concurrency/MessageQueue.h"
 
 enum GCConnectionState {
     CONNECTED,
@@ -29,17 +30,20 @@ class Connection {
         time_t lastReconnect; // last time it tried connecting
         int retryCounter; // amount of connects its tried
         int gcPort; // gorund controls port its listening on
+        MessageQueue *queue;
 
     public:
-        Connection(int id, int port, std::string ip, int gcPort); // constructor with the satellites listening port
+        Connection(int id, int port, std::string ip, int gcPort, MessageQueue *queue); // constructor with the satellites listening port
         void connect(); // function to connect to the satellite
         void sendMessage(const Message &messsage) const; // function to send messages to the satellite
         GCConnectionState getState(); // get what the current state of the peer is
         void disconnect(); // disconnect from the given satellite
         void heartbeat(); // updates when the last heart beat was
-        void reconnect(); // try to reconnect to the satellite
+        bool reconnect(); // try to reconnect to the satellite
         bool isTimedOut() const; // checks if the satellite has timed out
         void markConnected(); // sets the connection to connected
+        int getId();
+        bool isDead();
 };
 
 #endif

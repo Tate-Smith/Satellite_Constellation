@@ -15,6 +15,9 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include <thread>
 #include <csignal>
 
+int GC_PORT = 8000;
+std::string GC_IP = "127.0.0.1";
+
 void signalHandler(int sig) {
     // a function to handle the SIGINT signal
     exit(0);
@@ -22,8 +25,10 @@ void signalHandler(int sig) {
 
 void broadcast(Satellite &satellite) {
     int i = 0;
+    ConnectionHandler *handler = satellite.getConnectionHandler();
+    // add the ground control as a connection off the bat
+    handler->addConnection(GC_PORT, GC_IP, 0, satellite.getId());
     while (true) {
-        ConnectionHandler *handler = satellite.getConnectionHandler();
         handler->broadcastMessage(satellite.createHeartbeatMessage());
         usleep(5000000); // 5 seconds
         if (i % 2 == 0) {
@@ -43,12 +48,8 @@ int main(int argc, char* argv[]) {
     // usage: ./satellite id x y z vx vy vz myport ip id:peerIp1:port id:peerIp2:port id:peerIp3:port ...
     std::cout << "STARTED" << std::endl;
 
-    // create a message queue object for th elogger to recieve info
+    // create a message queue object for the logger to recieve info
     MessageQueue queue;
-    queue.pushBack("Logger started."); // push message to know that its working
-
-    // create a logger object
-    Logger logger("Satellite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
 
     // create a satellite with the provided arguments
     Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
@@ -72,11 +73,9 @@ int main(int argc, char* argv[]) {
     // handle signal
     signal(SIGINT, signalHandler);
 
-    // create a simulation with a time step of 1 second
-    Simulation sim(1, satellite);
-    // run a simulation thread with the run() func
-    std::thread simulationThread(&Simulation::run, &sim);
-    simulationThread.detach();
+    queue.pushBack("Logger started.");
+    // create a logger object
+    Logger logger("Satellite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
 
     // run a thread to listen for messages (network manager)
     NetworkManager networkManager(&queue, &satellite, &logger, std::stoi(argv[1]));
@@ -89,6 +88,12 @@ int main(int argc, char* argv[]) {
     // run a thread to send messages (connection handler through satellite)
     std::thread senderThread(&broadcast, std::ref(satellite));
     senderThread.detach();
+
+    // create a simulation with a time step of 1 second
+    Simulation sim(1, satellite);
+    // run a simulation thread with the run() func
+    std::thread simulationThread(&Simulation::run, &sim);
+    simulationThread.detach();
 
     // run a logger thread
     std::thread loggerThread(&Logger::log, &logger);

@@ -11,8 +11,10 @@
 #include <vector>
 #include "../../../src/protocol/Message.h"
 #include "../../../src/protocol/Serializer.h"
+#include "../../../src/concurrency/MessageQueue.h"
 #include "../datastorage/SatelliteData.h"
 #include "GCConnectionHandler.h"
+#include "../output/Terminal.h"
 
 class Receiver {
     private:
@@ -21,12 +23,13 @@ class Receiver {
         std::unordered_map<int, std::vector<char>> buffer; // this data structure is meant to accumulate the chunks of data from the 
         // satellite data downlink
         std::vector<SatelliteData> sats; // to hold all the data about the satellites
+        Terminal &terminal;
+        MessageQueue *queue;
 
         void handleFileDump(const File_Msg& msg); // this private helper method handles the file dump coming from a satellite
-        void printAllPeers(); // prints out the terminal look after a succesful datadump
-
+        
     public:
-        Receiver(); // constructor
+        Receiver(Terminal &terminal, MessageQueue *queue); // constructor
         void startServer(); // starts a server on port 8000
         void listen(GCConnectionHandler *handler); // listens for incmong messages
 };

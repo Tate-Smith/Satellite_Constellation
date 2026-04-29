@@ -23,11 +23,11 @@ void SatelliteData::updateVel(int vx, int vy, int vz) {
 }
 
 void SatelliteData::updateRecieved() {
-    this->packetsRecieved++;
+    this->packetsRecieved += 1;
 }
 
 void SatelliteData::updateSent() {
-    this->packetsSent++;
+    this->packetsSent += 1;
 }
 
 void SatelliteData::markAlive(bool b) {
@@ -44,8 +44,8 @@ int SatelliteData::getSatId() {
 
 std::string SatelliteData::toString() const {
     std::string satAlive = this->alive ? "alive" : "dead";
-    return "Satellited Id: " + std::to_string(this->id) +"; Position: [" + std::to_string(this->x) + ", " + std::to_string(this->y) + ", " 
+    return "Satellite Id: " + std::to_string(this->id) +"; Position: [" + std::to_string(this->x) + ", " + std::to_string(this->y) + ", " 
     + std::to_string(this->z) + " | Velocity: " + std::to_string(this->vx) + ", " + std::to_string(this->vy) + ", " + std::to_string(this->vz) 
-    + " | Packets sent/Recieved: " + std::to_string(this->packetsSent) + "/" + std::to_string(this->packetsRecieved) + " | Status: " 
-    + satAlive + " ]\n";
+    + " | Packets sent/recieved: " + std::to_string(this->packetsSent) + "/" + std::to_string(this->packetsRecieved) + " | Status: " 
+    + satAlive + "]\n";
 }

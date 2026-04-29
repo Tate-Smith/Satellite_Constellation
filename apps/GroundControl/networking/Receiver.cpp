@@ -1,7 +1,7 @@
 /*
 File: Reciever
 Date Created: April 9th, 2026
-Last Updated: April 27th, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file is the listener for the ground control station, it starts a server to listen from,
 then will listen for incoming messages and handles them
@@ -12,7 +12,7 @@ then will listen for incoming messages and handles them
 static const int PORT = 8000; // always listening on port 8000
 static const int BUFFER = 2048;
 
-Receiver::Receiver() : serverSocket(-1) {}
+Receiver::Receiver(Terminal &terminal, MessageQueue *queue) : serverSocket(-1), terminal(terminal), queue(queue) {}
 
 void Receiver::handleFileDump(const File_Msg& msg) {
     // This methods job is to handle the file dump incoming from a satellite
@@ -21,10 +21,9 @@ void Receiver::handleFileDump(const File_Msg& msg) {
 
     // if it is the last chunk of data
     if (msg.last) {
-        // print out everything in the file
-        std::cout << "File dump from satellite: " << msg.senderId << std::endl;
-        std::cout.write(chunk.data(), chunk.size());
-        std::cout << "<--- End of Dump --->" << std::endl;
+        // update the terminal
+        terminal.updateSat(msg.senderId, chunk);
+        terminal.printAllSats();
         chunk.clear();
     }
 }
@@ -35,7 +34,7 @@ void Receiver::startServer() {
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
-        std::cout << "Error creating socket" << std::endl;
+        queue->pushBack("Error creating socket");
         return;
     }
     // zeroes out the serverAddr struct
@@ -47,7 +46,7 @@ void Receiver::startServer() {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     // binds the socket to a certain port to listen for messages, if it is negative then there was an error
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        std::cout << "Error binding socket" << std::endl;
+        queue->pushBack("Error binding socket");
         return;
     }
     // set a timeout to prevent blocking
@@ -56,7 +55,7 @@ void Receiver::startServer() {
     timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    std::cout << "Server started on port: " << PORT << std::endl;
+    queue->pushBack("Server started on port: " + std::to_string(PORT));
 }   
 
 void Receiver::listen(GCConnectionHandler *handler) {
@@ -94,9 +93,10 @@ void Receiver::listen(GCConnectionHandler *handler) {
         else {
             // if known update connected status and heartbeat
             handler->heartbeatSat(message.senderId);
+            terminal.markSatDead(message.senderId, false);
         }
 
-        std::cout << "Message received from Satellite Id: " << message.senderId << std::endl;
+        queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
 
         // keep track of whether a message was properly handled or not
         bool handled = false;
