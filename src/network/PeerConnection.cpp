@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
@@ -10,7 +10,7 @@ Purpose: This file represents a connection to a peer in the network, and it can 
 
 PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId, int listeningPort) : 
 peerId(id), satId(satId), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
-lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), queue(queue) {}
+lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), listeningPort(listeningPort), queue(queue) {}
 
 void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects

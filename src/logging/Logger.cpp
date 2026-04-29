@@ -1,14 +1,14 @@
 /*
 File: Logger
 Date Created: April 7th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file is a logger object that logs everything that happens
 */
 
 #include "Logger.h"
 
-Logger::Logger(const std::string &name, MessageQueue *queue) : queue(queue) {
+Logger::Logger(const std::string &name, MessageQueue *queue) : queue(queue), fileName(name) {
     // open a file in write mode with the given name
     this->file.open(name);
 }
@@ -32,6 +32,7 @@ void Logger::log() {
         for (int i = 0; i < 19; ++i) timeStr += timeStamp[i];
         std::string logMessage = "[" + timeStr + "] : " + msg; 
 
+        std::lock_guard<std::mutex> lock(mtx);
         // print out the log message
         std::cout << logMessage << std::endl;
             
@@ -40,4 +41,10 @@ void Logger::log() {
             this->file << logMessage << std::endl;
         }
     }
+}
+
+void Logger::clearFile() {
+    std::lock_guard<std::mutex> lock(mtx);
+    this->file.close();
+    this->file.open(this->fileName, std::ios::trunc);
 }

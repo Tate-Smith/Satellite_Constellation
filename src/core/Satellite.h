@@ -18,6 +18,7 @@ class Satellite {
         double vx, vy, vz;
         MessageQueue *queue;
         int port; // the port that this satellite is listening on
+        bool waitingForAck = false;
 
     public:
         // constructor
@@ -48,6 +49,11 @@ class Satellite {
 
         // get the connection handler ptr
         ConnectionHandler* getConnectionHandler();
+
+        // to determine if the ground control succesfully recieved the message
+        void setWaitingForAck(bool b);
+
+        bool getWaitingForAck();
 };
 
 #endif

@@ -16,7 +16,6 @@ satellites and every once in a while send course adjustments
 // #include "../../src/logging/Logger.h"
 // #include "../../src/concurrency/MessageQueue.h"
 #include "networking/Connection.h"
-#include "datastorage/SatelliteData.h"
 #include "networking/Receiver.h"
 #include "networking/GCConnectionHandler.h"
 

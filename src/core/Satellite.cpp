@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 28th, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -10,7 +10,7 @@ information from other satellites and ground control
 #include "Satellite.h"
 
 Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue *queue) : 
-handler(queue, port), queue(queue) {
+handler(queue, port), queue(queue), port(port) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -96,11 +96,19 @@ std::vector<File_Msg> Satellite::createDataDump() {
         if (m.last) break;
     }
     // clear the file
-    file.clear();
     file.close();
+    std::ofstream clear(filename, std::ios::trunc);
     return msgs;
 }
 
 ConnectionHandler* Satellite::getConnectionHandler() {
     return &this->handler;
+}
+
+void Satellite::setWaitingForAck(bool b) {
+    this->waitingForAck = b;
+}
+
+bool Satellite::getWaitingForAck() {
+    return this->waitingForAck;
 }

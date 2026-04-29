@@ -7,6 +7,7 @@
 
 class SatelliteData {
     private:
+    int id;
         double x;
         double y;
         double z;
@@ -18,7 +19,15 @@ class SatelliteData {
         bool alive;
 
     public:
-        
+        SatelliteData(int id);
+        void updatePos(int x, int y, int z);
+        void updateVel(int vx, int vy, int vz);
+        void updateRecieved();
+        void updateSent();
+        void markAlive(bool b);
+        bool isAlive();
+        int getSatId();
+        std::string toString() const;
 };
 
 #endif

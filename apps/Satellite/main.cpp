@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: April 21st, 2026
+Last Updated: April 29th, 2026
 Author: Tate Smith
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
@@ -32,6 +32,7 @@ void broadcast(Satellite &satellite) {
             if (handler->hasConnection(0)) {
                 std::vector<File_Msg> msgs = satellite.createDataDump();
                 for (File_Msg m : msgs) handler->sendMessageToPeer(0, m);
+                satellite.setWaitingForAck(true);
             }
         }
         ++i;
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
     simulationThread.detach();
 
     // run a thread to listen for messages (network manager)
-    NetworkManager networkManager(&queue, std::stoi(argv[1]));
+    NetworkManager networkManager(&queue, &satellite, &logger, std::stoi(argv[1]));
     // start a server for the network manager
     networkManager.startServer(std::stoi(argv[8]));
     // listen for connections
