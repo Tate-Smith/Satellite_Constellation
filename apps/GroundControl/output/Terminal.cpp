@@ -28,13 +28,13 @@ void Terminal::updateSat(int id, std::vector<char> file) {
             std::string substring = line.substr(start + 4);
 
             // check what type of message is it
-            if (substring.starts_with("Satellite ")) {
+            if (substring.starts_with("SAT ")) {
                 data = substring;
             }
-            else if (substring.starts_with("Message received from ")) {
+            else if (substring.starts_with("[NETWORK] Message received from ")) {
                 sat.updateRecieved();
             }
-            else if (substring.starts_with("Sent message to ")) {
+            else if (substring.starts_with("[NETWORK] Sent message to ")) {
                 sat.updateSent();
             }
             line.clear();
@@ -44,12 +44,15 @@ void Terminal::updateSat(int id, std::vector<char> file) {
     // once the iteration through the file is finished update the satellites info
     if (!data.empty()) {
         // split the line up into its parts and update the SatelliteData info
-        std::regex pattern(R"(Satellite (\d+): Position \((.*?), (.*?), (.*?)\) Velocity \((.*?), (.*?), (.*?)\))");
-        std::smatch vals;
-        if (std::regex_search(data, vals, pattern)) {
-            sat.updatePos(std::stof(vals[2]), std::stof(vals[3]), std::stof(vals[4]));
-            sat.updateVel(std::stof(vals[5]), std::stof(vals[6]), std::stof(vals[7]));
+        int satId;
+        double x, y, z, vx, vy, vz;
+
+        int parsed = std::sscanf(data.c_str(), "SAT %d POS %lf %lf %lf VEL %lf %lf %lf", &satId, &x, &y, &z, &vx, &vy, &vz);
+        if (parsed == 7) {
+            sat.updatePos(x, y, z);
+            sat.updateVel(vx, vy, vz);
         }
+        else std::cerr << "Parsing failed" << std::endl;
     }
 }
 

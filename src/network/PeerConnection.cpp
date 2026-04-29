@@ -16,7 +16,7 @@ void PeerConnection::connect() {
     // this function connects to a peer, it create a socket and sets its state accordingly based on whether it connects
     this->peerSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (peerSocket < 0) {
-        queue->pushBack("Error creating socket for peer: " + std::to_string(peerId));
+        queue->pushBack("[ERROR] Error creating socket for Satellite: " + std::to_string(peerId));
         return;
     }
 
@@ -31,7 +31,7 @@ void PeerConnection::connect() {
 
     // converts the ip into binary, and if its negative then there was an error
     if (inet_pton(AF_INET, peerIp.c_str(), &peerAddr.sin_addr) <= 0) {
-        queue->pushBack("Invalid address / Address not supported for peer: " + std::to_string(peerId));
+        queue->pushBack("[ERROR] Invalid address / Address not supported for Satellite: " + std::to_string(peerId));
         return;
     }
     // whenever it attempts to connect it needs to send a message to the peer first to establish a conenction
@@ -44,7 +44,7 @@ void PeerConnection::connect() {
     m.timestamp = time(nullptr);
     m.alive = true;
     PeerConnection::sendMessage(m);
-    queue->pushBack("Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));
+    queue->pushBack("[NETWORK] Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));
     this->state = ConnectionState::CONNECTING;
 }
 
@@ -66,10 +66,10 @@ void PeerConnection::sendMessage(const Message& message) {
     int sent = sendto(this->peerSocket, reinterpret_cast<const char*>(msg.data()), 
     static_cast<int>(msg.size()), 0, (sockaddr*)&peerAddr, sizeof(peerAddr));
     if (sent < 0) {
-        queue->pushBack("Error sending message to: "  + std::to_string(peerId));
+        queue->pushBack("[ERROR] Error sending message to Satellite: "  + std::to_string(peerId));
     } else {
-        if (peerId != 0) queue->pushBack("Sent message to Satellite Id: " + std::to_string(peerId));
-        else queue->pushBack("Sent message to Ground Control");
+        if (peerId != 0) queue->pushBack("[NETWORK] Sent message to Satellite: " + std::to_string(peerId));
+        else queue->pushBack("[NETWORK] Sent message to Ground Control");
     }
 }
 
@@ -88,7 +88,7 @@ void PeerConnection::reconnect() {
     // if over 10 reconnect attempts skip ie peer is dead
     if (this->retryCounter > 10) return;
     this->lastReconnect = curTime;
-    queue->pushBack("Reconnecting to Satellite Id: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
+    queue->pushBack("[ERROR] Reconnecting to Satellite: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
     PeerConnection::disconnect();
     PeerConnection::connect();

@@ -8,15 +8,15 @@ Purpose: This file rholds the information for each satellite object the ground c
 
 #include "SatelliteData.h"
 
-SatelliteData::SatelliteData(int id) : id(id), x(0), y(0), z(0), vx(0), vy(0), vz(0), packetsRecieved(0), packetsSent(0), alive(true) {}
+SatelliteData::SatelliteData(int id) : id(id), x(0.0), y(0.0), z(0.0), vx(0.0), vy(0.0), vz(0.0), packetsRecieved(0), packetsSent(0), alive(true) {}
 
-void SatelliteData::updatePos(int x, int y, int z) {
+void SatelliteData::updatePos(double x, double y, double z) {
     this->x = x;
     this->y = y;
     this->z = z;
 }
 
-void SatelliteData::updateVel(int vx, int vy, int vz) {
+void SatelliteData::updateVel(double vx, double vy, double vz) {
     this->vx = vx;
     this->vy = vy;
     this->vz = vz;
@@ -44,7 +44,7 @@ int SatelliteData::getSatId() {
 
 std::string SatelliteData::toString() const {
     std::string satAlive = this->alive ? "alive" : "dead";
-    return "Satellite Id: " + std::to_string(this->id) +"; Position: [" + std::to_string(this->x) + ", " + std::to_string(this->y) + ", " 
+    return "Satellite: " + std::to_string(this->id) +"; Position: [" + std::to_string(this->x) + ", " + std::to_string(this->y) + ", " 
     + std::to_string(this->z) + " | Velocity: " + std::to_string(this->vx) + ", " + std::to_string(this->vy) + ", " + std::to_string(this->vz) 
     + " | Packets sent/recieved: " + std::to_string(this->packetsSent) + "/" + std::to_string(this->packetsRecieved) + " | Status: " 
     + satAlive + "]\n";

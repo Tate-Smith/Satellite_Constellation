@@ -34,7 +34,7 @@ void Logger::log() {
 
         std::lock_guard<std::mutex> lock(mtx);
         // print out the log message
-        std::cout << logMessage << std::endl;
+        // std::cout << logMessage << std::endl;
             
         // check if the file is open (created successfully)
         if (this->file.is_open()) {

@@ -29,7 +29,7 @@ void ConnectionHandler::update() {
         // check if peers are disconnected
         if (i.second.getState() == ConnectionState::CONNECTED && i.second.isTimedOut()) {
             // push message to logger queue
-            queue->pushBack("Satellite Id: " + std::to_string(i.first) + " has timed out");
+            queue->pushBack("[ERROR] Satellite: " + std::to_string(i.first) + " has timed out");
             i.second.disconnect();
         }
 
@@ -66,7 +66,7 @@ void ConnectionHandler::sendMessageToPeer(int peerId, const Message& message) {
     auto peer = connections.find(peerId);
     if (peer == connections.end()) {
         // push message to logger queue
-        queue->pushBack("Satellite Id: " + std::to_string(peerId) + " Not found");
+        queue->pushBack("[ERROR] Satellite: " + std::to_string(peerId) + " Not found");
         return;
     }
     // make sure the peer is connected as well
@@ -86,7 +86,7 @@ void ConnectionHandler::broadcastMessage(const Message& message) {
             }
             else {
                 // push message to logger queue
-                queue->pushBack("Satellite Id: " + std::to_string(i.first) + " Not connected, skipping message");
+                queue->pushBack("[ERROR] Satellite: " + std::to_string(i.first) + " Not connected, skipping message");
             }
         }
     }
@@ -103,13 +103,13 @@ void ConnectionHandler::printAllPeers() {
                 case DISCONNECTED: state = "DISCONNECTED"; break;
             }
             // push message to logger queue
-            queue->pushBack("Satellite Id " + std::to_string(i.first) + ": " + state);
+            queue->pushBack("[STATE] Satellite: " + std::to_string(i.first) + ": " + state);
         }
         else {
             switch(i.second.getState()) {
-                case CONNECTED: queue->pushBack("Connected to Ground"); break;
-                case CONNECTING: queue->pushBack("Connecting to Ground"); break;
-                case DISCONNECTED: queue->pushBack("Disconnected from Ground"); break;
+                case CONNECTED: queue->pushBack("[STATE] Connected to Ground"); break;
+                case CONNECTING: queue->pushBack("[STATE] Connecting to Ground"); break;
+                case DISCONNECTED: queue->pushBack("[ERROR] Disconnected from Ground"); break;
             }
         }
     }

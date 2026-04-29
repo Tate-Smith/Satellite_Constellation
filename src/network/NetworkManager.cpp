@@ -19,7 +19,7 @@ void NetworkManager::startServer(int port) {
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
-        queue->pushBack("Error creating socket");
+        queue->pushBack("[ERROR] Error creating socket");
         return;
     }
     // zeroes out the serverAddr struct
@@ -31,7 +31,7 @@ void NetworkManager::startServer(int port) {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     // binds the socket to a certain port to listen for messages, if it is negative then there was an error
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        queue->pushBack("Error binding socket");
+        queue->pushBack("[ERROR] Error binding socket");
         return;
     }
     // set a timeout to prevent blocking
@@ -40,7 +40,7 @@ void NetworkManager::startServer(int port) {
     timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    queue->pushBack("Server started on port: " + std::to_string(port));
+    queue->pushBack("[NETWORK] Server started on port: " + std::to_string(port));
 }   
 
 void NetworkManager::acceptConnections(ConnectionHandler *handler) {
@@ -82,7 +82,7 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, satId);
         else handler->heartbeatSat(message.senderId);
 
-        if (message.senderId != 0) queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
-        else queue->pushBack("Message received from Ground Control");
+        if (message.senderId != 0) queue->pushBack("[NETWORK] Message received from Satellite: " + std::to_string(message.senderId));
+        else queue->pushBack("[NETWORK] Message received from Ground Control");
     }
 }

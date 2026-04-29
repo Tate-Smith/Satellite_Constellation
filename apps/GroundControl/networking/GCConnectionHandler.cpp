@@ -10,8 +10,7 @@ Purpose: This file handles all conenctions with the ground control
 
 GCConnectionHandler::GCConnectionHandler(Terminal &terminal, MessageQueue *queue) : terminal(terminal), queue(queue) {}
 
-void GCConnectionHandler::addConnection(int port, const std::string &ip, int satId, int gcPort)
-{
+void GCConnectionHandler::addConnection(int port, const std::string &ip, int satId, int gcPort) {
     // create a new connection and add it to the map, and connect to it if it works
     std::lock_guard<std::mutex>lock(this->mtx);
     auto [it, inserted] = satellites.emplace(satId, Connection(satId, port, ip, gcPort, queue));

@@ -53,8 +53,8 @@ void Satellite::update(double dt) {
 }
 
 void Satellite::print() const {
-    std::string str = "Satellite " + std::to_string(id) + ": Position (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) 
-    + ") Velocity (" + std::to_string(vx) + ", " + std::to_string(vy) + ", " + std::to_string(vz) + ")";
+    std::string str = "SAT " + std::to_string(id) + " POS " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) 
+    + " VEL " + std::to_string(vx) + " " + std::to_string(vy) + " " + std::to_string(vz);
     // push the string onto the loggers message queue
     queue->pushBack(str);
 }

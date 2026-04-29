@@ -20,8 +20,8 @@ class SatelliteData {
 
     public:
         SatelliteData(int id);
-        void updatePos(int x, int y, int z);
-        void updateVel(int vx, int vy, int vz);
+        void updatePos(double x, double y, double z);
+        void updateVel(double vx, double vy, double vz);
         void updateRecieved();
         void updateSent();
         void markAlive(bool b);
