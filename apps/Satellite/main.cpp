@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
 */
@@ -49,11 +49,11 @@ int main(int argc, char* argv[]) {
     std::cout << "STARTED" << std::endl;
 
     // create a message queue object for the logger to recieve info
-    MessageQueue queue;
+    MessageQueue<std::string> queue;
 
     // create a satellite with the provided arguments
     Satellite satellite(std::stoi(argv[1]), std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),
-    std::stod(argv[7]), std::stod(argv[7]), &queue);
+    std::stod(argv[7]), std::stod(argv[8]), &queue);
 
     // parse remaining args and connect to them
     for (int i = 10; i < argc; ++i) {

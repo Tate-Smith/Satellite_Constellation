@@ -1,14 +1,14 @@
 /*
 File: Connection
 Date Created: April 9th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file handles connecting to a satellite and sending messages to it
 */
 
 #include "Connection.h"
 
-Connection::Connection(int id, int port, std::string ip, int gcPort, MessageQueue *queue) : id(id), satSocket(-1), port(port), ip(ip), 
+Connection::Connection(int id, int port, std::string ip, int gcPort, MessageQueue<std::string> *queue) : id(id), satSocket(-1), port(port), ip(ip), 
 state(DISCONNECTED), lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), gcPort(gcPort), queue(queue) {}
 
 void Connection::connect() {
@@ -36,8 +36,6 @@ void Connection::connect() {
     m.senderId = 0;
     m.senderPort = gcPort;
     m.header.type = MessageType::HEARTBEAT;
-    // get current time stamp
-    m.timestamp = time(nullptr);
     m.alive = true;
     m.header.size = sizeof(m);
     Connection::sendMessage(m);

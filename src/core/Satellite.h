@@ -16,13 +16,13 @@ class Satellite {
         uint32_t id;
         double x, y, z;
         double vx, vy, vz;
-        MessageQueue *queue;
+        MessageQueue<std::string> *queue;
         int port; // the port that this satellite is listening on
         bool waitingForAck = false;
 
     public:
         // constructor
-        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue *queue);
+        Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue<std::string> *queue);
 
         // getters
         uint32_t getId() const;
@@ -54,6 +54,8 @@ class Satellite {
         void setWaitingForAck(bool b);
 
         bool getWaitingForAck();
+
+        void handleCommand(Command cmd);
 };
 
 #endif

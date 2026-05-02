@@ -1,7 +1,7 @@
 /*
 File: ConnectionHandler
 Date Created: March 30th, 2026
-Last Updated: April 28th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file represents the handler for managing all peer connections in the network, it can add and remove connections, 
 send messages to specific peers, and broadcast messages to all peers
@@ -9,7 +9,7 @@ send messages to specific peers, and broadcast messages to all peers
 
 #include "ConnectionHandler.h"
 
-ConnectionHandler::ConnectionHandler(MessageQueue *queue, int listeningPort) : queue(queue), listeningPort(listeningPort) {}
+ConnectionHandler::ConnectionHandler(MessageQueue<std::string> *queue, int listeningPort) : queue(queue), listeningPort(listeningPort) {}
 
 void ConnectionHandler::addConnection(int port, const std::string& ip, int peerId, int satId) {
     // create a new connection and add it to the map

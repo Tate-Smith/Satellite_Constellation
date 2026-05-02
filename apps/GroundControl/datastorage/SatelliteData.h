@@ -7,7 +7,7 @@
 
 class SatelliteData {
     private:
-    int id;
+        uint32_t id;
         double x;
         double y;
         double z;
@@ -22,8 +22,8 @@ class SatelliteData {
         SatelliteData(int id);
         void updatePos(double x, double y, double z);
         void updateVel(double vx, double vy, double vz);
-        void updateRecieved();
-        void updateSent();
+        void updateRecieved(int num);
+        void updateSent(int num);
         void markAlive(bool b);
         bool isAlive();
         int getSatId();

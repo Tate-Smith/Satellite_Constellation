@@ -30,10 +30,10 @@ class Connection {
         time_t lastReconnect; // last time it tried connecting
         int retryCounter; // amount of connects its tried
         int gcPort; // gorund controls port its listening on
-        MessageQueue *queue;
+        MessageQueue<std::string> *queue;
 
     public:
-        Connection(int id, int port, std::string ip, int gcPort, MessageQueue *queue); // constructor with the satellites listening port
+        Connection(int id, int port, std::string ip, int gcPort, MessageQueue<std::string> *queue); // constructor with the satellites listening port
         void connect(); // function to connect to the satellite
         void sendMessage(const Message &messsage) const; // function to send messages to the satellite
         GCConnectionState getState(); // get what the current state of the peer is

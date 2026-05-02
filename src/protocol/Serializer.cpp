@@ -1,7 +1,7 @@
 /*
 File: Serializer.cpp
 Date Created: March 30th, 2026
-Last Updated: April 15th, 2026
+Last Updated: May 2nd, 2026
 Purpose: This file implements the serialization functions for converting messages to and from a byte stream
 */
 
@@ -34,8 +34,6 @@ std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
             msg_heartbeat->header = head;
             msg_heartbeat->senderId = senderId;
             msg_heartbeat->senderPort = senderPort;
-            std::memcpy(&msg_heartbeat->timestamp, buf + offset, sizeof(msg_heartbeat->timestamp));
-            offset += sizeof(msg_heartbeat->timestamp);
             std::memcpy(&msg_heartbeat->alive, buf + offset, sizeof(msg_heartbeat->alive));
             return msg_heartbeat;
         }

@@ -1,7 +1,7 @@
 /*
 File: SatelliteData
 Date Created: April 9th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 2nd, 2026
 Author: Tate Smith
 Purpose: This file rholds the information for each satellite object the ground control is connected to
 */
@@ -22,12 +22,12 @@ void SatelliteData::updateVel(double vx, double vy, double vz) {
     this->vz = vz;
 }
 
-void SatelliteData::updateRecieved() {
-    this->packetsRecieved += 1;
+void SatelliteData::updateRecieved(int num) {
+    this->packetsRecieved += num;
 }
 
-void SatelliteData::updateSent() {
-    this->packetsSent += 1;
+void SatelliteData::updateSent(int num) {
+    this->packetsSent += num;
 }
 
 void SatelliteData::markAlive(bool b) {

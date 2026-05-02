@@ -1,14 +1,14 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a peer in the network, and it can send and receive messages, and manage the connection
 */
 
 #include "PeerConnection.h"
 
-PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId, int listeningPort) : 
+PeerConnection::PeerConnection(int id, const std::string& ip, int port, MessageQueue<std::string> *queue, int satId, int listeningPort) : 
 peerId(id), satId(satId), peerIp(ip), peerPort(port), peerSocket(-1), state(DISCONNECTED), 
 lastHeartbeat(time(nullptr)), lastReconnect(time(nullptr)), retryCounter(0), listeningPort(listeningPort), queue(queue) {}
 
@@ -40,8 +40,6 @@ void PeerConnection::connect() {
     m.header.size = sizeof(m);
     m.senderId = satId;
     m.senderPort = this->listeningPort;
-    // get current time stamp
-    m.timestamp = time(nullptr);
     m.alive = true;
     PeerConnection::sendMessage(m);
     queue->pushBack("[NETWORK] Connecting to Satellite at address: " + peerIp + ":" + std::to_string(peerPort));

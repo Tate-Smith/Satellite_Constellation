@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control
@@ -9,7 +9,7 @@ information from other satellites and ground control
 
 #include "Satellite.h"
 
-Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue *queue) : 
+Satellite::Satellite(uint32_t id, double x, double y, double z, double vx, double vy, double vz, int port, MessageQueue<std::string> *queue) : 
 handler(queue, port), queue(queue), port(port) {
     this->id = id;
     this->x = x;
@@ -65,8 +65,6 @@ Heartbeat Satellite::createHeartbeatMessage() const {
     m.header.size = sizeof(m);
     m.senderId = id;
     m.senderPort = port;
-    // get current time stamp
-    m.timestamp = time(nullptr);
     m.alive = true;
     return m;
 }
@@ -111,4 +109,13 @@ void Satellite::setWaitingForAck(bool b) {
 
 bool Satellite::getWaitingForAck() {
     return this->waitingForAck;
+}
+
+void Satellite::handleCommand(Command cmd) {
+    this->x = cmd.x;
+    this->y = cmd.y;
+    this->z = cmd.z;
+    this->vx = cmd.vx;
+    this->vy = cmd.vy;
+    this->vz = cmd.vz;
 }

@@ -1,7 +1,7 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
@@ -10,7 +10,7 @@ It can start a server, and accept connections from other peers, and it uses the 
 
 static const int BUFFER = 2048;
 
-NetworkManager::NetworkManager(MessageQueue *queue, Satellite *self, Logger *logger, int satId) : serverSocket(-1), satId(satId), queue(queue),
+NetworkManager::NetworkManager(MessageQueue<std::string> *queue, Satellite *self, Logger *logger, int satId) : serverSocket(-1), satId(satId), queue(queue),
 self(self), logger(logger) {}
 
 void NetworkManager::startServer(int port) {
@@ -77,6 +77,8 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
             self->setWaitingForAck(false);
             logger->clearFile();
         }
+        // if its a command send the command to the satellite
+        else if (message.header.type == MessageType::COMMAND) self->handleCommand(static_cast<const Command&>(message));
 
         // add if not already known
         if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, satId);

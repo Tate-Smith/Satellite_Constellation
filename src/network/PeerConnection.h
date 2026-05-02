@@ -33,10 +33,10 @@ class PeerConnection {
         int retryCounter; // amount of connects its tried
         int listeningPort; // the port this peer is listening on
         sockaddr_in peerAddr;
-        MessageQueue *queue;
+        MessageQueue<std::string> *queue;
 
     public:
-        PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId, int listeningPort); // constructor
+        PeerConnection(int id, const std::string& ip, int port, MessageQueue<std::string> *queue, int satId, int listeningPort); // constructor
         void connect(); // connect to the given peer
         void disconnect(); // disconnect from the given peer
         void sendMessage(const Message& message); // send a message to this peer

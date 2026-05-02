@@ -1,7 +1,7 @@
 /*
 File: Main
 Date Created: April 9th, 2026
-Last Updated: April 27th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file runs the ground control side of the simulation, the ground controls job is to recieve telemtry updates from all the
 satellites and every once in a while send course adjustments
@@ -23,31 +23,6 @@ satellites and every once in a while send course adjustments
 void signalHandler(int sig) {
     // a function to handle the SIGINT signal
     exit(0);
-}
-
-void messageSatellite(const GCConnectionHandler &handler) {
-    while (true) {
-        // get the satellite id that the message is to be sent to
-        int id;
-        std::cout << "Satellite Id? ";
-        std::cin >> id;
-        // make sure it was valid input
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore();
-            std::cout << "Invalid input, should be an integer representing a Satellite Id" << std::endl;
-            continue;
-        }
-
-        // send a basic heartbeat message
-        Heartbeat m;
-        m.senderId = 0;
-        m.header.type = MessageType::HEARTBEAT;
-        m.header.size = sizeof(m);
-        m.timestamp = time(nullptr);
-        m.alive = true;
-        handler.sendMessageToSat(id, m);
-    }
 }
 
 void connectToSatellites(const std::string& file, GCConnectionHandler &handler, Terminal &terminal) {
@@ -92,10 +67,12 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Ground Control Up" << std::endl;
 
-    MessageQueue queue;
+    MessageQueue<std::string> loggerQueue;
+    MessageQueue<SatOutput> outputQueue; // to track updates from the reciver thread
+    MessageQueue<CommandInput> inputQueue; // to send commands to the connection handler thread
 
-    Terminal terminal;
-    GCConnectionHandler handler(terminal, &queue);
+    Terminal terminal(&outputQueue, &inputQueue);
+    GCConnectionHandler handler(&loggerQueue, &outputQueue, &inputQueue);
 
     // attempt to connect to all satellites
     connectToSatellites(argv[1], std::ref(handler), terminal);
@@ -104,18 +81,18 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, signalHandler);
 
     // once connected create a logger thread to handle all the data sent from the satellites
-    Logger logger("Ground_Control_logger.txt", &queue);
-    queue.pushBack("Logger started.");
+    Logger logger("Ground_Control_logger.txt", &loggerQueue);
+    loggerQueue.pushBack("Logger started.");
     
     // start a server
-    Receiver receiver(terminal, &queue);
+    Receiver receiver(&loggerQueue, &outputQueue);
     receiver.startServer();
     // create a thread to listen for messages
     std::thread listenerThread(&Receiver::listen, &receiver, &handler);
     listenerThread.detach();
 
-    // create another thread to handle sending messages to the satellites
-    std::thread senderThread(&messageSatellite, std::ref(handler));
+    // thread to handle sending messages to the satellites
+    std::thread senderThread(&GCConnectionHandler::sendCommands, std::ref(handler));
     senderThread.detach();
 
     // create an update thread
@@ -125,6 +102,9 @@ int main(int argc, char *argv[]) {
     // run a logger thread
     std::thread loggerThread(&Logger::log, &logger);
     loggerThread.detach();
+
+    // run the terminal
+    terminal.run();
 
     // loop continuously until user kills the program
     while(true) usleep(10000);  // 0.01 seconds

@@ -1,14 +1,14 @@
 /*
 File: Logger
 Date Created: April 7th, 2026
-Last Updated: April 29th, 2026
+Last Updated: May 1st, 2026
 Author: Tate Smith
 Purpose: This file is a logger object that logs everything that happens
 */
 
 #include "Logger.h"
 
-Logger::Logger(const std::string &name, MessageQueue *queue) : queue(queue), fileName(name) {
+Logger::Logger(const std::string &name, MessageQueue<std::string> *queue) : queue(queue), fileName(name) {
     // open a file in write mode with the given name
     this->file.open(name);
 }
