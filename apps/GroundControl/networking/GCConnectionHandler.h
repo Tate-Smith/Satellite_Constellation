@@ -20,9 +20,10 @@ class GCConnectionHandler {
         MessageQueue<SatOutput> *output_queue; // queue for the output values
         MessageQueue<CommandInput> *input_queue; // queue for the commands from the terminal
         Parser parser;
+        std::atomic<bool> *running;
 
     public:
-        GCConnectionHandler(MessageQueue<std::string> *queue, MessageQueue<SatOutput> *output_queue, MessageQueue<CommandInput> *input_queue);
+        GCConnectionHandler(MessageQueue<std::string> *queue, MessageQueue<SatOutput> *output_queue, MessageQueue<CommandInput> *input_queue, std::atomic<bool> *running);
         void addConnection(int port, const std::string& ip, int satId, int gcPort); // connecting to a satellite
         void update();  // drives reconnection logic
         void removeConnection(int satId);

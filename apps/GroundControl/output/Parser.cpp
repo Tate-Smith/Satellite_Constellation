@@ -23,6 +23,10 @@ SatOutput Parser::dataDecoder(int id, std::vector<char> chunk, bool alive) {
     for (char c : chunk) {
         if (c == '\n') {
             size_t start = line.find("] : ");
+            if (start == std::string::npos) {
+                line.clear();
+                continue;
+            }
             std::string substring = line.substr(start + 4);
 
             // check what type of message is it
@@ -30,7 +34,7 @@ SatOutput Parser::dataDecoder(int id, std::vector<char> chunk, bool alive) {
                 data = substring;
             }
             else if (substring.starts_with("[NETWORK] Message received from ")) {
-                out.packetsRecieved++;
+                out.packetsReceived++;
             }
             else if (substring.starts_with("[NETWORK] Sent message to ")) {
                 out.packetsSent++;
@@ -69,7 +73,7 @@ CommandInput Parser::commandDecoder(std::string command) {
     double x, y, z, vx, vy, vz;
 
     // get the command values
-    int parsed = std::sscanf(command.c_str(), "Command: SAT %d POS %lf %lf %lf VEL %lf %lf %lf", &satId, &x, &y, &z, &vx, &vy, &vz);
+    int parsed = std::sscanf(command.c_str(), "%d %lf %lf %lf %lf %lf %lf", &satId, &x, &y, &z, &vx, &vy, &vz);
     if (parsed == 7) {
         com.id = satId;
         com.new_x = x;

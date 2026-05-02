@@ -57,6 +57,24 @@ std::unique_ptr<Message> decode(const uint8_t* buf, size_t size) {
             std::memcpy(&msg_ack->received, buf + offset, sizeof(msg_ack->received));
             return msg_ack;
         }
+        case COMMAND: {
+            auto msg_cmd = std::make_unique<Command>();
+            msg_cmd->header = head;
+            msg_cmd->senderId = senderId;
+            msg_cmd->senderPort = senderPort;
+            std::memcpy(&msg_cmd->x, buf + offset, sizeof(msg_cmd->x));
+            offset += sizeof(msg_cmd->x);
+            std::memcpy(&msg_cmd->y, buf + offset, sizeof(msg_cmd->y));
+            offset += sizeof(msg_cmd->y);
+            std::memcpy(&msg_cmd->z, buf + offset, sizeof(msg_cmd->z));
+            offset += sizeof(msg_cmd->z);
+            std::memcpy(&msg_cmd->vx, buf + offset, sizeof(msg_cmd->vx));
+            offset += sizeof(msg_cmd->vx);
+            std::memcpy(&msg_cmd->vy, buf + offset, sizeof(msg_cmd->vy));
+            offset += sizeof(msg_cmd->vy);
+            std::memcpy(&msg_cmd->vz, buf + offset, sizeof(msg_cmd->vz));
+            return msg_cmd;
+        }
         default:
             throw std::runtime_error("Unknown message type");
     }

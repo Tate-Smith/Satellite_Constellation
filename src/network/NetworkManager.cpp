@@ -78,7 +78,17 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
             logger->clearFile();
         }
         // if its a command send the command to the satellite
-        else if (message.header.type == MessageType::COMMAND) self->handleCommand(static_cast<const Command&>(message));
+        else if (message.header.type == MessageType::COMMAND) {
+            self->handleCommand(static_cast<const Command&>(message));
+            // send an ack back to the ground control to let it know that it was received
+            Ack a;
+            a.header.size = sizeof(a);
+            a.header.type = MessageType::ACK;
+            a.senderId = satId;
+            a.senderPort = -1;
+            a.received = true;
+            handler->sendMessageToPeer(0, a);
+        }
 
         // add if not already known
         if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, satId);

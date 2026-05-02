@@ -8,26 +8,23 @@ Purpose: This file rholds the information for each satellite object the ground c
 
 #include "SatelliteData.h"
 
-SatelliteData::SatelliteData(int id) : id(id), x(0.0), y(0.0), z(0.0), vx(0.0), vy(0.0), vz(0.0), packetsRecieved(0), packetsSent(0), alive(true) {}
+SatelliteData::SatelliteData(int id) : id(id), x(0.0), y(0.0), z(0.0), vx(0.0), vy(0.0), vz(0.0), 
+packetsRecieved(0), packetsSent(0), alive(true), logger("GC_Satellite_" + std::to_string(id) + "_logger.txt", &loggerQueue, &running) {}
 
-void SatelliteData::updatePos(double x, double y, double z) {
+void SatelliteData::updateVals(double x, double y, double z, double vx, double vy, double vz) {
     this->x = x;
     this->y = y;
     this->z = z;
-}
-
-void SatelliteData::updateVel(double vx, double vy, double vz) {
     this->vx = vx;
     this->vy = vy;
     this->vz = vz;
+    loggerQueue.pushBack("SAT " + std::to_string(id) + " POS " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) 
+    + " VEL " + std::to_string(vx) + " " + std::to_string(vy) + " " + std::to_string(vz));
 }
 
-void SatelliteData::updateRecieved(int num) {
-    this->packetsRecieved += num;
-}
-
-void SatelliteData::updateSent(int num) {
-    this->packetsSent += num;
+void SatelliteData::updatePackets(int received, int sent) {
+    this->packetsRecieved += received;
+    this->packetsSent += sent;
 }
 
 void SatelliteData::markAlive(bool b) {
@@ -48,4 +45,9 @@ std::string SatelliteData::toString() const {
     + std::to_string(this->z) + " | Velocity: " + std::to_string(this->vx) + ", " + std::to_string(this->vy) + ", " + std::to_string(this->vz) 
     + " | Packets sent/recieved: " + std::to_string(this->packetsSent) + "/" + std::to_string(this->packetsRecieved) + " | Status: " 
     + satAlive + "]\n";
+}
+
+void SatelliteData::start() {
+    this->loggerThread = std::thread(&Logger::log, &logger);
+    loggerThread.detach();
 }

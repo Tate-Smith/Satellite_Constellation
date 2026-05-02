@@ -69,13 +69,14 @@ int main(int argc, char* argv[]) {
     }
 
     // the main sepration of concerns, sim loop, listening for messages, sending messages, logger
+    std::atomic<bool> running;
 
     // handle signal
     signal(SIGINT, signalHandler);
 
     queue.pushBack("Logger started.");
     // create a logger object
-    Logger logger("Satellite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue);
+    Logger logger("Satellite_" + std::to_string(std::stoi(argv[1])) + "_logger.txt", &queue, &running);
 
     // run a thread to listen for messages (network manager)
     NetworkManager networkManager(&queue, &satellite, &logger, std::stoi(argv[1]));

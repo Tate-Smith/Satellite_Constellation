@@ -1,14 +1,14 @@
 /*
 File: Logger
 Date Created: April 7th, 2026
-Last Updated: May 1st, 2026
+Last Updated: May 2nd, 2026
 Author: Tate Smith
 Purpose: This file is a logger object that logs everything that happens
 */
 
 #include "Logger.h"
 
-Logger::Logger(const std::string &name, MessageQueue<std::string> *queue) : queue(queue), fileName(name) {
+Logger::Logger(const std::string &name, MessageQueue<std::string> *queue, std::atomic<bool> *running) : queue(queue), fileName(name), running(running) {
     // open a file in write mode with the given name
     this->file.open(name);
 }
@@ -18,9 +18,10 @@ Logger::~Logger() {
 }
 
 void Logger::log() {
-    while (true) {
+    while (running) {
         // block until the queue has messages
         std::string msg = this->queue->pop();
+        if (!running) break;
         // get current time stamp
         time_t cur = time(nullptr);
         tm timeInfo;

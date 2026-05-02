@@ -6,6 +6,9 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <regex>
+#include <thread>
+#include <ncurses.h>
 #include "../datastorage/SatelliteData.h"
 #include "../../../src/concurrency/MessageQueue.h"
 #include "Parser.h"

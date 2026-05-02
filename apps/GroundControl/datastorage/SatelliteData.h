@@ -4,6 +4,8 @@
 #define SATELLITE_DATA_H
 
 #include <string>
+#include "../../../src/logging/Logger.h"
+#include <thread>
 
 class SatelliteData {
     private:
@@ -17,17 +19,20 @@ class SatelliteData {
         int packetsRecieved;
         int packetsSent;
         bool alive;
+        std::atomic<bool> running{true};
+        MessageQueue<std::string> loggerQueue;
+        Logger logger;
+        std::thread loggerThread;
 
     public:
         SatelliteData(int id);
-        void updatePos(double x, double y, double z);
-        void updateVel(double vx, double vy, double vz);
-        void updateRecieved(int num);
-        void updateSent(int num);
+        void updateVals(double x, double y, double z, double vx, double vy, double vz);
+        void updatePackets(int received, int sent);
         void markAlive(bool b);
         bool isAlive();
         int getSatId();
         std::string toString() const;
+        void start(); // has the logger log info
 };
 
 #endif

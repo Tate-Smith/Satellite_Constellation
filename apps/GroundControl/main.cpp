@@ -20,10 +20,7 @@ satellites and every once in a while send course adjustments
 #include "networking/GCConnectionHandler.h"
 #include "output/Terminal.h"
 
-void signalHandler(int sig) {
-    // a function to handle the SIGINT signal
-    exit(0);
-}
+std::atomic<bool> running(true);
 
 void connectToSatellites(const std::string& file, GCConnectionHandler &handler, Terminal &terminal) {
     // this function goes through the file line by line and trys to connect to each satelite 
@@ -54,7 +51,9 @@ void connectToSatellites(const std::string& file, GCConnectionHandler &handler, 
 
         // then connect to satellite
         handler.addConnection(port, ip, id, 8000);
-        terminal.addSat(std::make_unique<SatelliteData>(id));
+        auto sat = (std::make_unique<SatelliteData>(id));
+        sat->start();
+        terminal.addSat(std::move(sat));
     }
 }
 
@@ -72,42 +71,44 @@ int main(int argc, char *argv[]) {
     MessageQueue<CommandInput> inputQueue; // to send commands to the connection handler thread
 
     Terminal terminal(&outputQueue, &inputQueue);
-    GCConnectionHandler handler(&loggerQueue, &outputQueue, &inputQueue);
+    GCConnectionHandler handler(&loggerQueue, &outputQueue, &inputQueue, &running);
 
     // attempt to connect to all satellites
     connectToSatellites(argv[1], std::ref(handler), terminal);
 
-    // handle signal
-    signal(SIGINT, signalHandler);
-
     // once connected create a logger thread to handle all the data sent from the satellites
-    Logger logger("Ground_Control_logger.txt", &loggerQueue);
+    Logger logger("Ground_Control_logger.txt", &loggerQueue, &running);
     loggerQueue.pushBack("Logger started.");
     
     // start a server
-    Receiver receiver(&loggerQueue, &outputQueue);
+    Receiver receiver(&loggerQueue, &outputQueue, &running);
     receiver.startServer();
+
     // create a thread to listen for messages
     std::thread listenerThread(&Receiver::listen, &receiver, &handler);
-    listenerThread.detach();
 
     // thread to handle sending messages to the satellites
     std::thread senderThread(&GCConnectionHandler::sendCommands, std::ref(handler));
-    senderThread.detach();
 
     // create an update thread
     std::thread updateThread(&GCConnectionHandler::update, std::ref(handler));
-    updateThread.detach();
 
     // run a logger thread
     std::thread loggerThread(&Logger::log, &logger);
-    loggerThread.detach();
 
     // run the terminal
     terminal.run();
 
-    // loop continuously until user kills the program
-    while(true) usleep(10000);  // 0.01 seconds
+    // close all the queues
+    running = false;
+    loggerQueue.shutdown();
+    inputQueue.shutdown();
+
+    // join all the threads
+    listenerThread.join();
+    senderThread.join();
+    updateThread.join();
+    loggerThread.join();
 
     return 0;
 }

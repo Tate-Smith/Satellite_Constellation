@@ -27,11 +27,12 @@ class Receiver {
         MessageQueue<std::string> *logger_queue; // logger queue
         MessageQueue<SatOutput> *output_queue; // output queue
         Parser parser;
+        std::atomic<bool> *running;
 
         void handleFileDump(const File_Msg& msg); // this private helper method handles the file dump coming from a satellite
         
     public:
-        Receiver(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue); // constructor
+        Receiver(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue, std::atomic<bool> *running); // constructor
         void startServer(); // starts a server on port 8000
         void listen(GCConnectionHandler *handler); // listens for incoming messages
 };

@@ -8,8 +8,8 @@ Purpose: This file handles all conenctions with the ground control
 
 #include "GCConnectionHandler.h"
 
-GCConnectionHandler::GCConnectionHandler(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue, MessageQueue<CommandInput> *input_queue) : 
-logger_queue(logger_queue), output_queue(output_queue), input_queue(input_queue) {}
+GCConnectionHandler::GCConnectionHandler(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue, MessageQueue<CommandInput> *input_queue, 
+std::atomic<bool> *running) : logger_queue(logger_queue), output_queue(output_queue), input_queue(input_queue), running(running) {}
 
 void GCConnectionHandler::addConnection(int port, const std::string &ip, int satId, int gcPort) {
     // create a new connection and add it to the map, and connect to it if it works
@@ -21,7 +21,7 @@ void GCConnectionHandler::addConnection(int port, const std::string &ip, int sat
 }
 
 void GCConnectionHandler::update() {
-    while (true) {
+    while (running) {
         {
             // loop through every connection in the map, and if they are disconnected and outgoing try to reconnect
             std::lock_guard<std::mutex>lock(this->mtx);
@@ -80,9 +80,10 @@ void GCConnectionHandler::sendMessageToSat(int satId, const Message& message) co
 }
 
 void GCConnectionHandler::sendCommands() {
-    while (true) {
+    while (running) {
         // block until there are commands
         CommandInput com = this->input_queue->pop();
+        if (!running) break;
         // create a new command
         Command c;
         c.header.type = MessageType::COMMAND;

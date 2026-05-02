@@ -12,7 +12,8 @@ then will listen for incoming messages and handles them
 static const int PORT = 8000; // always listening on port 8000
 static const int BUFFER = 2048;
 
-Receiver::Receiver(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue) : serverSocket(-1), logger_queue(logger_queue), output_queue(output_queue) {}
+Receiver::Receiver(MessageQueue<std::string> *logger_queue, MessageQueue<SatOutput> *output_queue, std::atomic<bool> *running) : 
+serverSocket(-1), logger_queue(logger_queue), output_queue(output_queue), running(running) {}
 
 void Receiver::handleFileDump(const File_Msg& msg) {
     // This methods job is to handle the file dump incoming from a satellite
@@ -58,7 +59,7 @@ void Receiver::startServer() {
 }   
 
 void Receiver::listen(GCConnectionHandler *handler) {
-    while (true) {
+    while (running) {
         // function to connect to another peer
         // buffer for the message
         char buffer [BUFFER];
@@ -88,7 +89,10 @@ void Receiver::listen(GCConnectionHandler *handler) {
         Message& message = *msg;
 
        // add if not already known
-        if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, PORT);
+        if (!handler->hasConnection(message.senderId)) {
+            handler->addConnection(message.senderPort, ip, message.senderId, PORT);
+            handler->heartbeatSat(message.senderId);
+        }
         else {
             // if known update connected status and heartbeat
             handler->heartbeatSat(message.senderId);
@@ -108,6 +112,11 @@ void Receiver::listen(GCConnectionHandler *handler) {
         }
         else if (message.header.type == MessageType::HEARTBEAT) {
             // if it is a heartbeat
+            handled = true;
+        }
+        else if (message.header.type == MessageType::ACK) {
+            // if an ack from recieving a command
+            logger_queue->pushBack("Satellite: " + std::to_string(message.senderId) + " acknowledged command");
             handled = true;
         }
 
