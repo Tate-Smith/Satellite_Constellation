@@ -1,19 +1,17 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: April 9th, 2026
+Last Updated: May 1st, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and accept connections from other peers, and it uses the ConnectionHandler to manage the connections and messages
 */
 
 #include "NetworkManager.h"
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include "../protocol/Message.h"
-#include "../protocol/Serializer.h"
 
-NetworkManager::NetworkManager(MessageQueue *queue, int satId) : satId(satId), queue(queue) {}
+static const int BUFFER = 2048;
+
+NetworkManager::NetworkManager(MessageQueue<std::string> *queue, Satellite *self, Logger *logger, int satId) : serverSocket(-1), satId(satId), queue(queue),
+self(self), logger(logger) {}
 
 void NetworkManager::startServer(int port) {
     // function to start a server on the specified port
@@ -21,7 +19,7 @@ void NetworkManager::startServer(int port) {
     this->serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     // if the file descriptor is negative then there was an error creating the socket
     if (serverSocket < 0) {
-        queue->pushBack("Error creating socket");
+        queue->pushBack("[ERROR] Error creating socket");
         return;
     }
     // zeroes out the serverAddr struct
@@ -33,7 +31,7 @@ void NetworkManager::startServer(int port) {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     // binds the socket to a certain port to listen for messages, if it is negative then there was an error
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        queue->pushBack("Error binding socket");
+        queue->pushBack("[ERROR] Error binding socket");
         return;
     }
     // set a timeout to prevent blocking
@@ -42,14 +40,14 @@ void NetworkManager::startServer(int port) {
     timeout.tv_usec = 100000; // 100ms
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    queue->pushBack("Server started on port: " + std::to_string(port));
+    queue->pushBack("[NETWORK] Server started on port: " + std::to_string(port));
 }   
 
 void NetworkManager::acceptConnections(ConnectionHandler *handler) {
     while (true) {
         // function to connect to another peer
         // buffer for the message
-        char buffer [sizeof(Message)];
+        char buffer [BUFFER];
         sockaddr_in senderAddr;
         socklen_t addrlen = sizeof(senderAddr);
         // zeroes out the senderAddr struct
@@ -64,19 +62,39 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
         inet_ntop(AF_INET, &senderAddr.sin_addr, ip, sizeof(ip));
 
         // convert the bytes to a message
-        Message message = deserializeMessage(std::vector<uint8_t>(buffer, buffer + bytesReceived));
+        std::unique_ptr<Message> msg;
+        try {
+            msg = decode(reinterpret_cast<uint8_t*>(buffer), bytesReceived);
+        }
+        catch (...) {
+            // skip the udp packet if it isnt decoded properly
+            continue;
+        }
+        
+        Message& message = *msg;
 
-        PeerConnection* peer = handler->getConnection(message.senderId);
+        if (message.header.type == MessageType::ACK && self->getWaitingForAck()) {
+            self->setWaitingForAck(false);
+            logger->clearFile();
+        }
+        // if its a command send the command to the satellite
+        else if (message.header.type == MessageType::COMMAND) {
+            self->handleCommand(static_cast<const Command&>(message));
+            // send an ack back to the ground control to let it know that it was received
+            Ack a;
+            a.header.size = sizeof(a);
+            a.header.type = MessageType::ACK;
+            a.senderId = satId;
+            a.senderPort = -1;
+            a.received = true;
+            handler->sendMessageToPeer(0, a);
+        }
 
         // add if not already known
-        if (!peer) {
-            handler->addIncomingConnection(ntohs(senderAddr.sin_port), ip, message.senderId, satId);
-        }
-        else {
-            peer->heartbeat();
-            peer->markConnected();
-        }
+        if (!handler->hasConnection(message.senderId)) handler->addConnection(message.senderPort, ip, message.senderId, satId);
+        else handler->heartbeatSat(message.senderId);
 
-        queue->pushBack("Message received from Satellite Id: " + std::to_string(message.senderId));
+        if (message.senderId != 0) queue->pushBack("[NETWORK] Message received from Satellite: " + std::to_string(message.senderId));
+        else queue->pushBack("[NETWORK] Message received from Ground Control");
     }
 }

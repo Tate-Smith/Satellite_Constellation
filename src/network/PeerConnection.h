@@ -5,12 +5,18 @@
 
 #include <string>
 #include <ctime>
-#include "../protocol/Message.h"
-#include "../concurrency/MessageQueue.h"
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <iostream>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include "../concurrency/MessageQueue.h"
+#include "../protocol/Serializer.h"
+#include "../protocol/Message.h"
 
 enum ConnectionState {
     CONNECTED,
+    CONNECTING,
     DISCONNECTED
 };
 
@@ -25,20 +31,18 @@ class PeerConnection {
         time_t lastHeartbeat; // last time it sent a heartbeat message
         time_t lastReconnect; // last time it tried connecting
         int retryCounter; // amount of connects its tried
-        bool isOutgoing; // if the peer was connected to by this satellite
+        int listeningPort; // the port this peer is listening on
         sockaddr_in peerAddr;
-        MessageQueue *queue;
+        MessageQueue<std::string> *queue;
 
     public:
-        PeerConnection(int id, const std::string& ip, int port, MessageQueue *queue, int satId); // constructor
+        PeerConnection(int id, const std::string& ip, int port, MessageQueue<std::string> *queue, int satId, int listeningPort); // constructor
         void connect(); // connect to the given peer
         void disconnect(); // disconnect from the given peer
         void sendMessage(const Message& message); // send a message to this peer
         void heartbeat(); // updates when the last heart beat was
         void reconnect(); // try to reconnect to the peer
         ConnectionState getState(); // get what the current state of the peer is
-        bool getOutgoing(); // get whether this is an outgoing connection or not
-        void setOutgoing(bool b); // set this as an outgoing connection
         bool isTimedOut() const; // checks if the peer has timed out
         void markConnected(); // sets the connection to connected
 };

@@ -4,9 +4,10 @@
 #define SERIALIZER_H
 
 #include "Message.h"
-#include <vector>
+#include <cstring>
+#include <memory>
+#include <stdexcept>
 
-std::vector<std::uint8_t> serializeMessage(const Message& msg);
-Message deserializeMessage(const std::vector<std::uint8_t>& data);
+std::unique_ptr<Message> decode(const uint8_t* buf, size_t size);
 
 #endif

@@ -1,16 +1,14 @@
 /*
 File: Logger
 Date Created: April 7th, 2026
-Last Updated: April 8th, 2026
+Last Updated: May 2nd, 2026
 Author: Tate Smith
 Purpose: This file is a logger object that logs everything that happens
 */
 
 #include "Logger.h"
-#include <iostream>
-#include <unistd.h>
 
-Logger::Logger(const std::string &name, MessageQueue *queue) : queue(queue) {
+Logger::Logger(const std::string &name, MessageQueue<std::string> *queue, std::atomic<bool> *running) : queue(queue), fileName(name), running(running) {
     // open a file in write mode with the given name
     this->file.open(name);
 }
@@ -20,25 +18,34 @@ Logger::~Logger() {
 }
 
 void Logger::log() {
-    while (true) {
-        // wait until the queue has messages
-        while (!queue->hasMessages()) usleep(10000); // 0.01 seconds
+    while (running) {
+        // block until the queue has messages
+        std::string msg = this->queue->pop();
+        if (!running) break;
         // get current time stamp
         time_t cur = time(nullptr);
-        tm* time = localtime(&cur);
+        tm timeInfo;
+        localtime_r(&cur, &timeInfo);
         char timeStamp[19];
-        strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", time);
+        strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", &timeInfo);
         // convert the timeStamp to a string
         std::string timeStr;
         for (int i = 0; i < 19; ++i) timeStr += timeStamp[i];
-        std::string logMessage = "[" + timeStr + "] : " + queue->pop(); 
+        std::string logMessage = "[" + timeStr + "] : " + msg; 
 
+        std::lock_guard<std::mutex> lock(mtx);
         // print out the log message
-        std::cout << logMessage << std::endl;
-        
+        // std::cout << logMessage << std::endl;
+            
         // check if the file is open (created successfully)
         if (this->file.is_open()) {
             this->file << logMessage << std::endl;
         }
     }
+}
+
+void Logger::clearFile() {
+    std::lock_guard<std::mutex> lock(mtx);
+    this->file.close();
+    this->file.open(this->fileName, std::ios::trunc);
 }

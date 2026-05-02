@@ -5,17 +5,23 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
+#include <unistd.h>
 #include "../concurrency/MessageQueue.h"
 
 class Logger {
     private:
         std::ofstream file;
-        MessageQueue *queue;
+        MessageQueue<std::string> *queue;
+        std::string fileName;
+        std::mutex mtx;
+        std::atomic<bool> *running;
 
     public:
-        Logger(const std::string &name, MessageQueue *queue); // constructor that takes in a string for the name of the file, and the messageQueue
+        Logger(const std::string &name, MessageQueue<std::string> *queue, std::atomic<bool> *running); // constructor that takes in a string for the name of the file, and the messageQueue
         ~Logger(); // destructor to close the file at the end
         void log(); // a function used to log messages
+        void clearFile(); // to clear the log file
 };
 
 #endif

@@ -5,18 +5,26 @@
 
 #include <string>
 #include <netinet/in.h>
-#include "../protocol/Message.h"
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <iostream>
 #include "ConnectionHandler.h"
 #include "../concurrency/MessageQueue.h"
+#include "../protocol/Message.h"
+#include "../protocol/Serializer.h"
+#include "../core/Satellite.h"
+#include "../logging/Logger.h"
 
 class NetworkManager {
     int serverSocket;
     int satId;
     sockaddr_in serverAddr;
-    MessageQueue *queue;
+    MessageQueue<std::string> *queue;
+    Satellite *self;
+    Logger *logger;
 
     public:
-        NetworkManager(MessageQueue * queue, int satId); // constructor to initialize the queue
+        NetworkManager(MessageQueue<std::string> *queue, Satellite *self, Logger *logger, int satId); // constructor to initialize the queue
         void startServer(int port); // starts a server on a given port
         void acceptConnections(ConnectionHandler *handler); // accepts connections from peers to this port
 };
