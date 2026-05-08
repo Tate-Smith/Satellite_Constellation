@@ -1,9 +1,7 @@
-satellite
-CMakeLists.txt
-*_logger.txt
-ground_control
-SatSetup.txt
-build/
+*.txt
+run_ground_control
+run_satellite
+/output
 
 # vscode settings
 .vscode/
