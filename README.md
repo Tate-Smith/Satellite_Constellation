@@ -151,6 +151,9 @@ Example:
 > 3 -263810.0 123278.0 120983.23 -2379.0 -0.1 0.238
 ```
 
+Output:
+<img width="1190" height="282" alt="Screenshot 2026-05-08 at 8 21 05 AM" src="https://github.com/user-attachments/assets/2cb0f940-1a62-4246-ab7e-5ccfe03ac8ba" />
+
 ---
 
 ## NASA JPL Power of Ten — Coding Standards Compliance
