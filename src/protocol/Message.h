@@ -1,7 +1,7 @@
 /*
 File: Message.h
 Date Created: March 30th, 2026
-Last Updated: May 6th, 2026
+Last Updated: May 8th, 2026
 Purpose: This file is the header file for the message struct, which is used for communication between satellites in the network. 
 It defines the structure of a message, including its type, sender ID, and content.
 */
@@ -11,6 +11,7 @@ It defines the structure of a message, including its type, sender ID, and conten
 
 #include <cstdint>
 #include "ProtocolUtils.h"
+#include "../config/Config.h"
 
 enum MessageType : uint8_t {
     HEARTBEAT,
@@ -48,7 +49,7 @@ struct Heartbeat : Message {
 };
 
 struct File_Msg : Message {
-    char data[1024];
+    char data[Config::FILE_CHUNK_SIZE];
     int16_t len;
     bool last;
 

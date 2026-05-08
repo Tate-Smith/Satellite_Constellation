@@ -15,6 +15,7 @@
 #include "../../protocol/Serializer.h"
 #include "../core/Satellite.h"
 #include "../../logging/Logger.h"
+#include "../../config/Config.h"
 
 class NetworkManager {
     private:

@@ -1,7 +1,7 @@
 /*
 File: PeerConnection
 Date Created: March 30th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file represents a connection to a satellite in the network, it can send messages, and manage the connection
 to the given peer
@@ -65,7 +65,8 @@ void PeerConnection::disconnect() {
     */
     assert(loggerQueue != nullptr);
     if (this->peerSocket >= 0) {
-        close(this->peerSocket);
+        int retval = close(this->peerSocket);
+        if (retval <= 0) loggerQueue->pushBack("[ERROR] Socket failed to close");
         this->peerSocket = -1;
     }
 
@@ -113,11 +114,11 @@ void PeerConnection::reconnect() {
     // try to reestablish a connection with the peer
     // get current time
     time_t curTime = time(nullptr);
-    // check if the last reconnect attempt was over 10 seconds ago
-    if (curTime - this->lastReconnect < 10) return;
+    // check if the last reconnect attempt was over interval limit
+    if (curTime - this->lastReconnect < Config::RECONNECT_INTERVAL) return;
     this->retryCounter++;
-    // if over 10 reconnect attempts skip ie peer is dead
-    if (this->retryCounter > 10) return;
+    // if over reconnect attempts limit skip ie peer is dead
+    if (this->retryCounter > Config::MAX_RECONNECT_ATTEMPTS) return;
     this->lastReconnect = curTime;
     loggerQueue->pushBack("[ERROR] Reconnecting to Satellite: " + std::to_string(this->peerId) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
@@ -139,7 +140,7 @@ bool PeerConnection::isTimedOut() const {
     */
     assert(lastHeartbeat >= 0);
     assert(state == ConnectionState::CONNECTED);
-    return (time(nullptr) - lastHeartbeat) > 20;
+    return (time(nullptr) - lastHeartbeat) > Config::TIMEOUT_THRESHOLD;
 }
 
 void PeerConnection::markConnected() {

@@ -1,7 +1,7 @@
 /*
 File: Logger
 Date Created: April 7th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file is a logger object that logs everything to a given file
 */
@@ -77,6 +77,10 @@ void Logger::clearFile() {
     assert(!fileName.empty());
     assert(file.is_open());
     std::lock_guard<std::mutex> lock(mtx);
-    this->file.close();
+    try {
+        this->file.close();
+    } catch(const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
     this->file.open(this->fileName, std::ios::trunc);
 }

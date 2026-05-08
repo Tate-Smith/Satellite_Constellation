@@ -1,9 +1,10 @@
 /*
 File: Main
 Date Created: March 25th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
-Purpose: This file runs the simulation with the time step, and it updates the satellite accordingly
+Purpose: This file runs the datellite process, it creates the satellite object along with its many
+threads, and it handles graceful shutdown
 */
 
 #include <unistd.h>
@@ -14,8 +15,8 @@ Purpose: This file runs the simulation with the time step, and it updates the sa
 #include "network/NetworkManager.h"
 #include "../logging/Logger.h"
 #include "../concurrency/MessageQueue.h"
+#include "../config/Config.h"
 
-int GC_PORT = 8000;
 std::string GC_IP = "127.0.0.1";
 std::atomic<bool> running(true);
 
@@ -32,20 +33,20 @@ void broadcast(Satellite &satellite) {
     This method takes in a satellite reference and broadcasts heartbeat messages every 5 seconds , and every
     10 seconds it prints the status of all its peers
     */
-    assert(GC_PORT >= 0);
+    assert(Config::GC_PORT >= 0);
     assert(!GC_IP.empty());
     assert(running);
     int i = 0;
     ConnectionHandler *handler = satellite.getConnectionHandler();
     assert(handler != nullptr);
     // add the ground control as a connection off the bat
-    handler->addConnection(GC_PORT, GC_IP, 0, satellite.getId());
+    handler->addConnection(Config::GC_PORT, GC_IP, 0, satellite.getId());
     while (running) {
         handler->broadcastMessage(satellite.createHeartbeatMessage());
-        usleep(5000000); // 5 seconds
-        if (i % 2 == 0) {
+        sleep(Config::HEARTBEAT_INTERVAL);
+        if (i % Config::DUMP_INTERVAL == 0) {
             handler->printAllPeers();
-            // every 10 seconds send an update to ground control
+            // send a downlink every hearbeat interval * dump interval (ie : 5 * 2 = 10 seconds)
             if (handler->hasConnection(0)) {
                 std::vector<File_Msg> msgs = satellite.createDataDump();
                 for (const File_Msg &m : msgs) {
@@ -111,8 +112,8 @@ int main(int argc, char* argv[]) {
     // run a thread to send messages (connection handler through satellite)
     std::thread senderThread(&broadcast, std::ref(satellite));
 
-    // create a simulation with a time step of 1 second
-    Simulation sim(1, satellite, &running);
+    // create a simulation with a time step
+    Simulation sim(Config::TIME_STEP, satellite, &running);
     // run a simulation thread with the run() func
     std::thread simulationThread(&Simulation::run, &sim);
 

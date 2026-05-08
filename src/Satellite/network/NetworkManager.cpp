@@ -1,14 +1,12 @@
 /*
 File: NetworkManager
 Date Created: March 28th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Purpose: This file contains the implementation for the NetworkManager class, which is responsible for handling all network listening
 It can start a server, and listen for messages on that port, as well as keeping the connections up to date
 */
 
 #include "NetworkManager.h"
-
-static const int BUFFER = 2048;
 
 NetworkManager::NetworkManager(MessageQueue<std::string> *loggerQueue, Satellite *self, Logger *logger, int satId, std::atomic<bool> *running) : 
 serverSocket(-1), satId(satId), loggerQueue(loggerQueue), self(self), logger(logger), running(running) {
@@ -63,7 +61,7 @@ void NetworkManager::startServer(int port) {
     // set a timeout to prevent blocking
     struct timeval timeout;
     timeout.tv_sec = 0; 
-    timeout.tv_usec = 100000; // 100ms
+    timeout.tv_usec = Config::TIMEOUT_MS;
     int retval = setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (retval != 0) throw std::runtime_error("setsockopt failed");
 
@@ -76,12 +74,12 @@ void NetworkManager::acceptConnections(ConnectionHandler *handler) {
     that connection is already present in the handler, if not it adds the connection. It also can handle different 
     message types
     */
-    assert(BUFFER > 0);
+    assert(Config::BUFFER_SIZE > 0);
     assert(handler != nullptr);
     assert(loggerQueue != nullptr);
     assert(running != nullptr);
     // buffer for the message
-    char buffer [BUFFER];
+    char buffer [Config::BUFFER_SIZE];
     std::unique_ptr<Message> msg;
     while (running->load()) {
         // function to connect to another peer

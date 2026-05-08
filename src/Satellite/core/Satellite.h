@@ -10,6 +10,7 @@
 #include "../../protocol/Message.h"
 #include "../network/ConnectionHandler.h"
 #include "../../concurrency/MessageQueue.h"
+#include "../../config/Config.h"
 
 class Satellite {
     private:
