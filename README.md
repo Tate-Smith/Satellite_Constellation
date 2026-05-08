@@ -97,12 +97,12 @@ they are resolved entirely at compile time with zero runtime overhead.
 | `GC_PORT` | `8000` | Ground control listening port |
 | `BUFFER_SIZE` | `2048` | UDP receive buffer size (bytes) |
 | `TIMEOUT_MS` | `100` | Socket receive timeout (milliseconds) |
-| `HEARTBEAT_INTERVAL_S` | `5` | Seconds between satellite heartbeats |
-| `DUMP_INTERVAL_S` | `10` | Seconds between telemetry log dumps |
-| `RECONNECT_INTERVAL_S` | `10` | Seconds between reconnection attempts |
-| `TIMEOUT_THRESHOLD_S` | `20` | Seconds before a satellite is deemed timed out |
+| `HEARTBEAT_INTERVAL` | `5` | Seconds between satellite heartbeats |
+| `DUMP_INTERVAL` | `10` | Seconds between telemetry log dumps |
+| `RECONNECT_INTERVAL` | `10` | Seconds between reconnection attempts |
+| `TIMEOUT_THRESHOLD` | `20` | Seconds before a satellite is deemed timed out |
 | `MAX_RECONNECT_ATTEMPTS` | `10` | Reconnect attempts before marking satellite dead |
-| `TIME_STEP_S` | `1.0` | Simulation tick rate in seconds |
+| `TIME_STEP` | `1.0` | Simulation tick rate in seconds |
 | `MAX_FILE_CHUNKS` | `100` | Max UDP chunks per telemetry dump |
 | `MAX_CONFIG_LINES` | `100` | Max satellites readable from config file |
 | `FILE_CHUNK_SIZE` | `1024` | Bytes per file message chunk |
