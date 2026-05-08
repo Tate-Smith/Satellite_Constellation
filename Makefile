@@ -5,7 +5,7 @@
 # Purpose: This make file compiles all the files necessary to run the program
 
 CXX      := g++
-CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -Wshadow -Werror -pthread
+CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -Wshadow -Werror -pthread -MMD -MP
 LDFLAGS  := -pthread
 NCURSES  := -lncurses
 
@@ -44,7 +44,10 @@ SHARED_OBJS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SHARED_SRCS))
 # ── Targets ───────────────────────────────────────────────────────────────────
 .PHONY: all satellite ground_control clean
 
-all: ground_control satellite
+all: output ground_control satellite
+
+output:
+	@mkdir -p output
 
 ground_control: $(GC_OBJS) $(SHARED_OBJS)
 	$(CXX) $(LDFLAGS) $^ $(NCURSES) -o run_ground_control
@@ -56,6 +59,9 @@ satellite: $(SAT_OBJS) $(SHARED_OBJS)
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+ALL_OBJS := $(GC_OBJS) $(SAT_OBJS) $(SHARED_OBJS)
+-include $(ALL_OBJS:.o=.d)
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
 clean:

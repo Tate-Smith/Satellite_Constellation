@@ -1,15 +1,13 @@
 /*
 File: Reciever
 Date Created: April 9th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file is the listener for the ground control station, it starts a server to listen from,
 then will listen for incoming messages and handles them
 */
 
 #include "Receiver.h"
-
-static const int BUFFER = 2048;
 
 Receiver::Receiver(const int gcPort, MessageQueue<std::string> *loggerQueue, MessageQueue<SatOutput> *outputQueue, std::atomic<bool> *running) : 
 serverSocket(-1), loggerQueue(loggerQueue), outputQueue(outputQueue), running(running), gcPort(gcPort) {}
@@ -133,7 +131,7 @@ void Receiver::startServer() {
     // set a timeout to prevent blocking
     struct timeval timeout;
     timeout.tv_sec = 0; 
-    timeout.tv_usec = 100000; // 100ms
+    timeout.tv_usec = Config::TIMEOUT_MS;
     int retval = setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (retval != 0) throw std::runtime_error("setsockopt failed");
 
@@ -146,10 +144,10 @@ void Receiver::listen(GCConnectionHandler *handler) {
     message it then handles that method and adds it to the connections in connection handler if
     not already present. It is run by the listener thread 
     */
-    assert(BUFFER > 0);
+    assert(Config::BUFFER_SIZE > 0);
     assert(handler != nullptr);
     // buffer for the message
-    char buf [BUFFER];
+    char buf [Config::BUFFER_SIZE];
     std::unique_ptr<Message> msg;
     while (running->load()) {
         // function to connect to another peer

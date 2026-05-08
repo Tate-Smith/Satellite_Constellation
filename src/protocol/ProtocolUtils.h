@@ -1,3 +1,5 @@
+// provides the helper function for Message.h to serilaize the structs
+
 #ifndef PROTOCOLS_UTILS_H
 #define PROTOCOLS_UTILS_H
 

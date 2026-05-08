@@ -1,7 +1,7 @@
 /*
 File: Satellite
 Date Created: March 25th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file represents a Satellite node in the constellation, it can send and receive 
 information from other satellites and ground control. It owns a connection handler to manage the 
@@ -126,9 +126,8 @@ std::vector<File_Msg> Satellite::createDataDump() {
 
     // create the vector to return
     std::vector<File_Msg> msgs;
-    const int MAX_CHUNKS = 100;
     int i = 0;
-    while (i < MAX_CHUNKS) {
+    while (i < Config::MAX_FILE_CHUNKS) {
         // create message and return it
         File_Msg m;
         m.header.type = MessageType::FILE_MSG;
@@ -144,7 +143,11 @@ std::vector<File_Msg> Satellite::createDataDump() {
         i++;
     }
     // clear the file
-    file.close();
+    try {
+        file.close();
+    } catch(const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
     std::ofstream clear(filename, std::ios::trunc);
     // check if succesfully cleared
     if (!clear) {

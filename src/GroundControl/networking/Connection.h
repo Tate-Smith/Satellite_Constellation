@@ -13,6 +13,7 @@
 #include "../../protocol/Message.h"
 #include "../../protocol/Serializer.h"
 #include "../../concurrency/MessageQueue.h"
+#include "../../config/Config.h"
 
 enum GCConnectionState {
     CONNECTED,

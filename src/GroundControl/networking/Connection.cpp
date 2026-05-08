@@ -1,7 +1,7 @@
 /*
 File: Connection
 Date Created: April 9th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file handles the connection to a satellite, and methods to communicate with it
 */
@@ -87,7 +87,8 @@ void Connection::disconnect(){
     */
     assert(lastReconnect >= 0);
     if (this->satSocket >= 0) {
-        close(this->satSocket);
+        int retval = close(this->satSocket);
+        if (retval <= 0) loggerQueue->pushBack("[ERROR] Socket failed to close");
         this->satSocket = -1;
     }
 
@@ -114,11 +115,11 @@ bool Connection::reconnect() {
     assert(loggerQueue != nullptr);
     // get current time
     time_t curTime = time(nullptr);
-    // check if the last reconnect attempt was over 10 seconds ago
-    if (curTime - this->lastReconnect < 10) return true;
+    // check if the last reconnect attempt was over the interval
+    if (curTime - this->lastReconnect < Config::RECONNECT_INTERVAL) return true;
     this->retryCounter++;
-    // if over 10 reconnect attempts skip ie satellite is dead
-    if (this->retryCounter > 10) return false;
+    // if over the reconnect attempts reconnect attempts skip ie satellite is dead
+    if (this->retryCounter > Config::MAX_RECONNECT_ATTEMPTS) return false;
     this->lastReconnect = curTime;
     loggerQueue->pushBack("[NETWORK] Reconnecting to Satellite Id: " + std::to_string(this->id) + "; Reconnect counter = " + std::to_string(this->retryCounter));
     // clean up first
@@ -132,7 +133,7 @@ bool Connection::isTimedOut() const {
     This method determines of a satellite is timed out, based on if its last message was over 20 seconds ago
     */
     assert(lastHeartbeat >= 0);
-    return (time(nullptr) - lastHeartbeat) > 20;
+    return (time(nullptr) - lastHeartbeat) > Config::TIMEOUT_THRESHOLD;
 }
 
 void Connection::markConnected() {
@@ -156,5 +157,5 @@ bool Connection::isDead() {
     /*
     This method returns if a satellite is dead or not, a satellite is considered dead if there have been over 10 reconnect attempts
     */
-    return this->retryCounter > 10;
+    return this->retryCounter > Config::MAX_RECONNECT_ATTEMPTS;
 }

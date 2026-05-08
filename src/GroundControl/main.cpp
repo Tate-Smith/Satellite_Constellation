@@ -1,10 +1,11 @@
 /*
 File: Main
 Date Created: April 9th, 2026
-Last Updated: May 7th, 2026
+Last Updated: May 8th, 2026
 Author: Tate Smith
 Purpose: This file runs the ground control side of the simulation, the ground controls job is to recieve telemtry updates from all the
-satellites and every once in a while send course adjustments
+satellites and every once in a while send course adjustments. It creates all the satellite data objects and manages all the different
+threads for the ground control, and handles a graceful shutdown 
 */
 
 #include <iostream>
@@ -14,15 +15,14 @@ satellites and every once in a while send course adjustments
 #include <unordered_map>
 #include <thread>
 #include <cassert>
+#include <csignal>
 #include "../../src/logging/Logger.h"
 #include "../../src/concurrency/MessageQueue.h"
 #include "networking/Connection.h"
 #include "networking/Receiver.h"
 #include "networking/GCConnectionHandler.h"
 #include "output/Terminal.h"
-#include <csignal>
-
-const int GC_PORT = 8000;
+#include "../config/Config.h"
 
 std::atomic<bool> running(true);
 
@@ -42,19 +42,18 @@ void connectToSatellites(const std::string& file, GCConnectionHandler &handler, 
     */
 
     assert(!file.empty());
-    assert(GC_PORT >= 0);
+    assert(Config::GC_PORT >= 0);
    
     // open the file
     std::ifstream data(file);
     // make sure it worked
     if (!data) throw std::runtime_error("File failed to open");
     std::string s;
-    const int MAX_LINES = 100;
     int i = 0;
     std::vector<std::string> split;
 
     // loop through all the data in the file
-    while (getline(data, s) && i < MAX_LINES) {
+    while (getline(data, s) && i < Config::MAX_CONFIG_LINES) {
         split.clear();
         // split each line into the id, ip and port
         std::stringstream str(s);
@@ -84,7 +83,7 @@ int main(int argc, char *argv[]) {
     and the Connection handler, Logger, Terminal, and Receiver are initialized here aswell
     */
     assert(argc > 1);
-    assert(GC_PORT >= 0);
+    assert(Config::GC_PORT >= 0);
     // the input should only be a file containg every satellite and their ip and port information
     if (argc != 2) {
         std::cerr << "Invalid number of arguments" << std::endl;
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
     MessageQueue<CommandInput> inputQueue; // to send commands to the connection handler thread
 
     Terminal terminal(&outputQueue, &inputQueue, &running);
-    GCConnectionHandler handler(&loggerQueue, &outputQueue, &inputQueue, &running, GC_PORT);
+    GCConnectionHandler handler(&loggerQueue, &outputQueue, &inputQueue, &running, Config::GC_PORT);
 
     // attempt to connect to all satellites
     connectToSatellites(argv[1], std::ref(handler), terminal, &loggerQueue);
@@ -108,7 +107,7 @@ int main(int argc, char *argv[]) {
     loggerQueue.pushBack("Logger started.");
     
     // start a server
-    Receiver receiver(GC_PORT, &loggerQueue, &outputQueue, &running);
+    Receiver receiver(Config::GC_PORT, &loggerQueue, &outputQueue, &running);
     receiver.startServer();
 
     // create a thread to listen for messages

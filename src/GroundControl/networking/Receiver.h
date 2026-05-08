@@ -17,6 +17,7 @@
 #include "GCConnectionHandler.h"
 #include "../output/Terminal.h"
 #include "../output/Parser.h"
+#include "../../config/Config.h"
 
 class Receiver {
     private:

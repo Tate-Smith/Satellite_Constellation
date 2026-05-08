@@ -2,6 +2,7 @@
 run_ground_control
 run_satellite
 /output
+/build
 
 # vscode settings
 .vscode/

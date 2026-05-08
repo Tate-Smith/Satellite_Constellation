@@ -13,6 +13,7 @@
 #include "../../concurrency/MessageQueue.h"
 #include "../../protocol/Serializer.h"
 #include "../../protocol/Message.h"
+#include "../../config/Config.h"
 
 enum ConnectionState {
     CONNECTED,
