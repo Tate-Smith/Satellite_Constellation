@@ -1,7 +1,7 @@
 /*
 File: Message.h
 Date Created: March 30th, 2026
-Last Updated: May 2nd, 2026
+Last Updated: May 6th, 2026
 Purpose: This file is the header file for the message struct, which is used for communication between satellites in the network. 
 It defines the structure of a message, including its type, sender ID, and content.
 */
@@ -19,12 +19,10 @@ enum MessageType : uint8_t {
     COMMAND
 };
 
-#pragma pack(push, 1)
 struct Header {
     uint8_t type;
     uint32_t size;
 };
-#pragma pack(pop)
 
 struct Message {
     Header header;
@@ -39,6 +37,7 @@ struct Heartbeat : Message {
     bool alive;
 
     std::vector<uint8_t> serialize() const override {
+        // how the data of the Heartbeat is serialized
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
@@ -54,6 +53,7 @@ struct File_Msg : Message {
     bool last;
 
     std::vector<uint8_t> serialize() const override {
+        // how the data of the File_Msg is serialized
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
@@ -69,6 +69,7 @@ struct Ack : Message {
     bool received;
 
     std::vector<uint8_t> serialize() const override {
+        // how the data of the Ack is serialized
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
@@ -81,6 +82,7 @@ struct Ack : Message {
 struct Command : Message {
     double x, y, z, vx, vy, vz; 
     std::vector<uint8_t> serialize() const override {
+        // how the data of the Command is serialized
         std::vector<uint8_t> buffer;
         appendBytes(buffer, &header, sizeof(header));
         appendBytes(buffer, &senderId, sizeof(senderId));
