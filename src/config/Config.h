@@ -10,7 +10,7 @@ namespace Config {
     constexpr int TIMEOUT_MS = 100; // socket timeout
 
     // Timing
-    constexpr int HEARTBEAT_INTERVAL = 10; // seconds between heartbeats
+    constexpr int HEARTBEAT_INTERVAL = 5; // seconds between heartbeats
     constexpr int DUMP_INTERVAL = 2; // number of heartbeats per dump
     constexpr int RECONNECT_INTERVAL = 10; // seconds between reconnect attempts
     constexpr int TIMEOUT_THRESHOLD = 20; // seconds before satellite deemed timed out
