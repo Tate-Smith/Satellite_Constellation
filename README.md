@@ -130,7 +130,7 @@ make satellite
 make clean
 ```
 
-The Makefile compiles with `-Wall -Wextra -Wpedantic -Wshadow -Werror -pthread`.
+The Makefile compiles with `-Wall -Wextra -Wpedantic -Wshadow -Werror -pthread -MMD -MP`.
 
 ---
 
