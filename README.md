@@ -197,10 +197,7 @@ they run for the lifetime of the program and exit via an atomic shutdown flag. B
 iteration count would break the architecture of a long-running networked system.
 
 **Rule 3 — No Dynamic Allocation After Initialization:** C++ standard library types (`std::vector`,
-`std::string`, `std::unique_ptr`) allocate on the heap throughout runtime. This is standard practice for
-a modern C++ networked application. A flight-software port would replace these with static buffers and
-fixed-size memory pools.
-
+`std::string`, `std::unique_ptr`) allocate on the heap throughout runtime.
 ---
 
 ## Author
