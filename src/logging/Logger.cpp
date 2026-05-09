@@ -51,6 +51,7 @@ void Logger::log() {
         timeStr.clear();
         msg = queue->pop();
         if (!running->load()) break;
+        if (msg.empty()) continue;
         // get current time stamp
         time_t cur = time(nullptr);
         tm timeInfo = {};
