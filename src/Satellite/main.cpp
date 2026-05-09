@@ -17,7 +17,6 @@ threads, and it handles graceful shutdown
 #include "../concurrency/MessageQueue.h"
 #include "../config/Config.h"
 
-std::string GC_IP = "127.0.0.1";
 std::atomic<bool> running(true);
 
 void signalHandler(int sig) {
@@ -34,13 +33,12 @@ void broadcast(Satellite &satellite) {
     10 seconds it prints the status of all its peers
     */
     assert(Config::GC_PORT >= 0);
-    assert(!GC_IP.empty());
     assert(running);
     int i = 0;
     ConnectionHandler *handler = satellite.getConnectionHandler();
     assert(handler != nullptr);
     // add the ground control as a connection off the bat
-    handler->addConnection(Config::GC_PORT, GC_IP, 0, satellite.getId());
+    handler->addConnection(Config::GC_PORT, "127.0.0.1", 0, satellite.getId());
     while (running) {
         handler->broadcastMessage(satellite.createHeartbeatMessage());
         sleep(Config::HEARTBEAT_INTERVAL);
