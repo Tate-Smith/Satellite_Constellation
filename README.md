@@ -1,6 +1,6 @@
 # Satellite Constellation Simulator
 
-A multi-process, real-time satellite network simulator built in C++20. A ground control station communicates with a configurable constellation of satellite nodes over live UDP sockets — exchanging telemetry, heartbeats, course-correction commands, and acknowledgements across independently threaded processes.
+A multi-process, real-time satellite network simulator built in C++20. A ground control station communicates with a configurable constellation of satellite nodes over live UDP sockets exchanging telemetry, heartbeats, course-correction commands, and acknowledgements across independently threaded processes.
 
 ---
 
@@ -38,15 +38,15 @@ Each satellite is a standalone process. The ground control is a separate process
 
 ## Features
 
-- **Live UDP networking** — real socket communication between independent processes, no simulation stubs
-- **Binary message protocol** — custom serialization/deserialization for four message types: `HEARTBEAT`, `FILE_MSG`, `ACK`, `COMMAND`
-- **Multi-threaded architecture** — listener, sender, simulation, update, and logger threads running concurrently per process
-- **Heartbeat & reconnection logic** — satellites are monitored for timeouts; ground control attempts reconnection with exponential backoff up to 10 retries before marking a satellite dead
-- **Telemetry data dumps** — each satellite periodically dumps its full log file to ground control over chunked UDP messages, which are reassembled and parsed at the receiver
-- **Course correction commands** — ground control operator can send position and velocity override commands to any satellite via the terminal
-- **Live ncurses terminal UI** — real-time telemetry dashboard with bottom-line command input
-- **Thread-safe message queues** — condition-variable-backed generic queue used for all inter-thread communication
-- **Per-satellite logging** — every satellite and the ground control write timestamped logs to individual output files
+- **Live UDP networking** - real socket communication between independent processes, no simulation stubs
+- **Binary message protocol** - custom serialization/deserialization for four message types: `HEARTBEAT`, `FILE_MSG`, `ACK`, `COMMAND`
+- **Multi-threaded architecture** - listener, sender, simulation, update, and logger threads running concurrently per process
+- **Heartbeat & reconnection logic** - satellites are monitored for timeouts; ground control attempts reconnection with exponential backoff up to 10 retries before marking a satellite dead
+- **Telemetry data dumps** - each satellite periodically dumps its full log file to ground control over chunked UDP messages, which are reassembled and parsed at the receiver
+- **Course correction commands** - ground control operator can send position and velocity override commands to any satellite via the terminal
+- **Live ncurses terminal UI** - real-time telemetry dashboard with bottom-line command input
+- **Thread-safe message queues** - condition variable-backed generic queue used for all inter-thread communication
+- **Per satellite logging** - every satellite and the ground control write timestamped logs to individual output files
 
 ---
 
@@ -192,7 +192,7 @@ structurally, but the spirit of each rule was considered throughout development.
 
 The three intentional deviations are:
 
-**Rule 2 — Fixed Loop Bounds:** Core thread loops (`while (running->load())`) are unbounded by design —
+**Rule 2 — Fixed Loop Bounds:** Core thread loops (`while (running->load())`) are unbounded by design,
 they run for the lifetime of the program and exit via an atomic shutdown flag. Bounding them with a fixed
 iteration count would break the architecture of a long-running networked system.
 
