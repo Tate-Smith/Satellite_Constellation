@@ -147,7 +147,7 @@ This starts 5 satellite processes with preset parameters, waits for their server
 
 **To launch manually:**
 ```bash
-# Satellite: id x y z vx vy vz port ip peer:ip:port ...
+# Satellite: id x y z vx vy vz port ip peerId:ip:port ...
 ./run_satellite 1 137932.0 0.1278 0 1000.90 2368.1 1 5001 127.0.0.1 2:127.0.0.1:5002
 
 # Ground Control: path to satellite config file
