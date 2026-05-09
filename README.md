@@ -41,7 +41,7 @@ Each satellite is a standalone process. The ground control is a separate process
 - **Live UDP networking** - real socket communication between independent processes, no simulation stubs
 - **Binary message protocol** - custom serialization/deserialization for four message types: `HEARTBEAT`, `FILE_MSG`, `ACK`, `COMMAND`
 - **Multi-threaded architecture** - listener, sender, simulation, update, and logger threads running concurrently per process
-- **Heartbeat & reconnection logic** - satellites are monitored for timeouts; ground control attempts reconnection with exponential backoff up to 10 retries before marking a satellite dead
+- **Heartbeat & reconnection logic** - satellites are monitored for timeouts; ground control attempts reconnection with exponential backoff up to a configurable number of retries before marking a satellite dead
 - **Telemetry data dumps** - each satellite periodically dumps its full log file to ground control over chunked UDP messages, which are reassembled and parsed at the receiver
 - **Course correction commands** - ground control operator can send position and velocity override commands to any satellite via the terminal
 - **Live ncurses terminal UI** - real-time telemetry dashboard with bottom-line command input
