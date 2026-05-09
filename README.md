@@ -188,7 +188,7 @@ The [NASA/JPL Power of Ten rules](https://spinroot.com/gerard/pdf/P10.pdf) are s
 standards written for C. This project is C++, so some rules address concerns modern C++ handles
 structurally, but the spirit of each rule was considered throughout development.
 
-**Rules 1, 4, 5, 6, 8, 9, and 10 are fully followed.**
+**Rules 1, 4, 5, 6, 7, 8, 9, and 10 are fully followed.**
 
 The three intentional deviations are:
 
@@ -200,10 +200,6 @@ iteration count would break the architecture of a long-running networked system.
 `std::string`, `std::unique_ptr`) allocate on the heap throughout runtime. This is standard practice for
 a modern C++ networked application. A flight-software port would replace these with static buffers and
 fixed-size memory pools.
-
-**Rule 7 — Check All Non-Void Return Values:** All critical network calls (`socket()`, `bind()`,
-`sendto()`) are checked. The return values of `close()` in disconnect methods and `file.close()` in
-`createDataDump()` are not — a known gap to address.
 
 ---
 
