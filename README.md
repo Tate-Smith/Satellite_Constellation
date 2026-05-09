@@ -98,7 +98,7 @@ they are resolved entirely at compile time with zero runtime overhead.
 | `BUFFER_SIZE` | `2048` | UDP receive buffer size (bytes) |
 | `TIMEOUT_MS` | `100` | Socket receive timeout (milliseconds) |
 | `HEARTBEAT_INTERVAL` | `5` | Seconds between satellite heartbeats |
-| `DUMP_INTERVAL` | `2` | number of heartbeats per dump |
+| `DUMP_INTERVAL` | `2` | Number of heartbeats per dump |
 | `RECONNECT_INTERVAL` | `10` | Seconds between reconnection attempts |
 | `TIMEOUT_THRESHOLD` | `20` | Seconds before a satellite is deemed timed out |
 | `MAX_RECONNECT_ATTEMPTS` | `10` | Reconnect attempts before marking satellite dead |
